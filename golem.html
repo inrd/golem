@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>::::Golem</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="A command driven outliner.">
+<meta name="author" content="Thomas Hennebert">
+</head>
+<style>
+
+body {
+    color: #555;
+    font-family: arial, helvetica, serif;
+}
+
+h2 {
+    font-size: 0.9em;
+    font-weight: normal;
+    margin-bottom: 3em;
+}
+
+a {
+    color: #15c8ff;
+}
+
+#cli {
+    width: 80%;
+    background-color: #444;
+    color: #eee;
+    height: 2em;
+    font-family: monospace;
+    margin-bottom: 1em;
+}
+
+p.info {
+    color: #777;
+    font-size: 0.8em;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+pre {
+    margin-top: 4em;
+    background-color: #444;
+    color: #eee;
+    padding: 1em;
+    height: auto;
+    min-height: 400px;
+    max-height: 400px;
+    overflow: auto;
+    word-break: normal !important;
+    word-wrap: normal !important;
+    white-space: pre-line !important;
+}
+
+
+</style>
+<body>
+
+    <script>
+
+        function app() {
+
+            function Node (title) {
+                this.title = title;
+                this.parent = null;
+                this.children = [];
+            }
+
+            function Tree (title) {
+                let node = new Node(title);
+                this.root = node;
+                this.focus = this.root;
+            }
+
+            Tree.prototype.traverse = function(callback) {
+                (function recurse (node) {
+                    node.children.forEach(function(child) {
+                        recurse(child);
+                    });
+                    callback(node);
+                })(this.root);
+            };
+
+            // Call to clean up a restored tree
+            Tree.prototype.init_parents = function() {
+                (function recurse (node, parent) {
+                    node.children.forEach(function(child) {
+                        recurse(child, node);
+                    });
+                    node.parent = parent;
+                })(this.root, null);
+            };
+
+            const version = "1.0";
+
+            const cli = document.getElementById("cli");
+            const stdout = document.querySelector("#stdout");
+
+            let tree = new Tree("Golem");
+            let clipboard = null;
+            let aliases = {};
+
+            function log_message(msg) {
+                const log = document.createElement('p');
+                log.textContent = msg;
+                stdout.insertBefore(log, stdout.firstChild);
+            }
+
+            function parse_index_args (args) {
+                if (args.length > 0 ){
+                    if (!isNaN(args[0])) {
+                        // first argument is a number, return index (conformed)
+                        return parseInt(args[0]) - 1;
+                    }
+                    else {
+                        // args are a search pattern, so iterate nodes
+                        let pattern = args.join(" ");
+                        let exp = new RegExp(pattern, "i");
+                        for (let i = 0; i < tree.focus.children.length; i++) {
+                            const node = tree.focus.children[i];
+                            if (node.title.search(exp) !== -1) {
+                                return i;
+                            }
+                        }
+                        return undefined;
+                    }
+                }
+                else {
+                    return undefined;
+                }
+            }
+
+            function get_focus_path () {
+                if (tree.focus.parent === null) {
+                    return "/";
+                }
+                let t = tree.focus;
+                let p = "";
+                while (t.parent !== null) {
+                    p = "/" + t.title + p;
+                    t = t.parent;
+                }
+                return p;
+            }
+
+            function add_cmd (args) {
+                const t = args.join(" ");
+                tree.focus.children.push(new Node(t));
+                tree.focus.children[tree.focus.children.length - 1].parent = tree.focus;
+                log_message(`New node :::: ${t}`); 
+            }
+
+            function addf_cmd (args) {
+                const t = args.join(" ");
+                tree.focus.children.push(new Node(t));
+                tree.focus.children[tree.focus.children.length - 1].parent = tree.focus;
+                tree.focus = tree.focus.children[tree.focus.children.length - 1];
+                log_message(`Focus > New node :::: ${get_focus_path()}`); 
+            }
+
+            function del_cmd (args) {
+                const nidx = parseInt(args[0]) - 1;
+                if (!isNaN(nidx) && nidx < tree.focus.children.length) {
+                    const t = tree.focus.children[nidx].title;
+                    tree.focus.children.splice(nidx, 1);
+                    log_message(`Deleted node :::: ${t}`); 
+                }
+                else {
+                    log_message("Invalid node");
+                }
+            }
+
+            function edit_cmd (args) {
+                const nidx = parseInt(args[0]) - 1;
+                if (!isNaN(nidx) && nidx < tree.focus.children.length) {
+                    args.splice(0, 1);
+                    const msg = args.join(" ");
+                    const t = tree.focus.children[nidx].title;
+                    tree.focus.children[nidx].title = msg;
+                    log_message(`Edited node :::: ${t}\n=> ${msg}`); 
+                }
+                else {
+                    log_message("Invalid node");
+                }
+            }
+
+            function cut_cmd (args) {
+                const nidx = parse_index_args(args);
+                if (nidx !== undefined && nidx < tree.focus.children.length) {
+                    clipboard = tree.focus.children[nidx];
+                    tree.focus.children.splice(nidx, 1);
+                    log_message(`Cut node :::: ${clipboard.title}`); 
+                }
+                else {
+                    log_message("Invalid node");
+                }
+            }
+
+            function copy_cmd (args) {
+                const nidx = parse_index_args(args);
+                if (nidx !== undefined && nidx < tree.focus.children.length) {
+                    clipboard = tree.focus.children[nidx];
+                    log_message(`Copied node :::: ${clipboard.title}`); 
+                }
+                else {
+                    log_message("Invalid node");
+                }
+            }
+
+            function paste_cmd (args) {
+                if (clipboard !== null) {
+                    tree.focus.children.push(clipboard);
+                    tree.focus.children[tree.focus.children.length - 1].parent = tree.focus;
+                    log_message(`Pasted node :::: ${clipboard.title}`); 
+                }
+            }
+
+            function list_cmd (args) {
+                let nl = `::::${get_focus_path()}\n`;
+                if (tree.focus.children.length === 0) {
+                    nl = nl + "Empty node...";
+                }
+                else {
+                    tree.focus.children.forEach(function(node, idx) {
+                        nl = nl + `${idx + 1}. `;
+                        if (node.children.length > 0) {
+                            nl = nl + "[+] ";
+                        }
+                        nl = nl + `${node.title}\n`;
+                    });
+                }
+                log_message(nl);
+            }
+
+            function focus_cmd (args) {
+                const nidx = parse_index_args(args);
+                if (nidx !== undefined && nidx < tree.focus.children.length) {
+                    tree.focus = tree.focus.children[nidx];
+                    let nl = `Focus => ${get_focus_path()}\n`;
+                    if (tree.focus.children.length === 0) {
+                        nl = nl + "Empty node...";
+                    }
+                    else {
+                        tree.focus.children.forEach(function(node, idx) {
+                            nl = nl + `${idx + 1}. `;
+                            if (node.children.length > 0) {
+                                nl = nl + "[+] ";
+                            }
+                            nl = nl + `${node.title}\n`;
+                        });
+                    }
+                    log_message(nl);
+                }
+                else {
+                    log_message("Invalid node");
+                }
+            }
+
+            function back_cmd (args)  {
+                if (tree.focus.parent !== null) {
+                    tree.focus = tree.focus.parent;
+                    let nl = `Focus => ${get_focus_path()}\n`;
+                    if (tree.focus.children.length === 0) {
+                        nl = nl + "Empty node...";
+                    }
+                    else {
+                        tree.focus.children.forEach(function(node, idx) {
+                            nl = nl + `${idx + 1}. `;
+                            if (node.children.length > 0) {
+                                nl = nl + "[+] ";
+                            }
+                            nl = nl + `${node.title}\n`;
+                        });
+                    }
+                    log_message(nl);
+                }
+                else {
+                    log_message("Already at root...");
+                }
+            }
+
+            function root_cmd (args) {
+                if (tree.focus !== tree.root) {
+                    tree.focus = tree.root;
+                    let nl = `Focus => ${get_focus_path()}\n`;
+                    if (tree.focus.children.length === 0) {
+                        nl = nl + "Empty node...";
+                    }
+                    else {
+                        tree.focus.children.forEach(function(node, idx) {
+                            nl = nl + `${idx + 1}. `;
+                            if (node.children.length > 0) {
+                                nl = nl + "[+] ";
+                            }
+                            nl = nl + `${node.title}\n`;
+                        });
+                    }
+                    log_message(nl);
+                }
+                else {
+                    log_message("Already at root...");
+                }
+            }
+
+            function search_cmd (args) {
+                let pattern = args.join(" ");
+                let exp = new RegExp(pattern, "i");
+                let output = `Search :::: ${pattern}\n\n`;
+                tree.traverse(function (node) {
+                    if (node.title.search(exp) !== -1) {
+                        if (node.parent === null) {
+                            output = output + "::::/\n";
+                        }
+                        else {
+                            let t = node;
+                            let p = "";
+                            while (t.parent !== null) {
+                                p = "/" + t.title + p;
+                                t = t.parent;
+                            }
+                            output = output + "=> " + p + "\n\n";
+                        }
+                    }
+                });
+                log_message(output);
+            }
+
+            function up_cmd (args) {
+                if (args.length > 0) {
+                    const src = parseInt(args.splice(0, 1)) - 1;
+                    if (!isNaN(src) && src < tree.focus.children.length) {
+                        let offset = 1;
+                        const off = parseInt(args.splice(0, 1));
+                        if (!isNaN(off) && off > 0) {
+                            offset = off;
+                        }
+                        let new_idx = src - offset;
+                        new_idx = new_idx < 0 ? 0 : new_idx;
+                        new_idx = new_idx < tree.focus.children.length ? new_idx : tree.focus.children.length;
+                        const tmp = tree.focus.children[src];
+                        tree.focus.children.splice(src, 1);
+                        tree.focus.children.splice(new_idx, 0, tmp);
+                        list_cmd();
+                    }
+                    else {
+                        log_message("Invalid node");
+                    }
+                }
+                else {
+                    log_message("Missing arguments");
+                }
+            }
+
+            function down_cmd (args) {
+                if (args.length > 0) {
+                    const src = parseInt(args.splice(0, 1)) - 1;
+                    if (!isNaN(src) && src < tree.focus.children.length) {
+                        let offset = 1;
+                        const off = parseInt(args.splice(0, 1));
+                        if (!isNaN(off) && off > 0) {
+                            offset = off;
+                        }
+                        let new_idx = src + offset;
+                        new_idx = new_idx < 0 ? 0 : new_idx;
+                        new_idx = new_idx < tree.focus.children.length ? new_idx : tree.focus.children.length;
+                        const tmp = tree.focus.children[src];
+                        tree.focus.children.splice(src, 1);
+                        tree.focus.children.splice(new_idx, 0, tmp);
+                        list_cmd();
+                    }
+                    else {
+                        log_message("Invalid node");
+                    }
+                }
+                else {
+                    log_message("Missing arguments");
+                }
+            }
+
+            function export_cmd (args) {
+                let mode = args[0];
+                let dump = "";
+
+                if (mode === 'alias') {
+                    dump = JSON.stringify(aliases);
+                }
+                else {
+                    dump = JSON.stringify(tree.root, function (key, value) {
+                        if (key === "parent") {
+                            return null;
+                        }
+                        else {
+                            return value;
+                        }
+                    });
+                }
+
+                log_message(dump);
+                let rng = document.createRange();
+                rng.selectNode(stdout.firstChild);
+                window.getSelection().addRange(rng);
+                cli.blur();
+            }
+
+            function import_cmd (args) {
+                let mode = args[0];
+
+                if (mode === 'alias') {
+                    args.splice(0, 1);
+                    const data = args.join(" ");
+                    const al = JSON.parse(data);
+                    if (al !== undefined) {
+                        aliases = al;
+                        localStorage.setItem('Golemaliases', JSON.stringify(aliases));
+                        log_message("Aliases imported from JSON");
+                    }
+                    else {
+                        log_message ("Failed to import from JSON");
+                    }
+                }
+                else {
+                    const data = args.join(" ");
+                    const new_tree = JSON.parse(data);
+                    if (new_tree !== undefined) {
+                        localStorage.clear();
+                        tree.root = new_tree;
+                        tree.init_parents();
+                        tree.focus = tree.root;
+                        list_cmd();
+                        log_message("JSON data imported");
+                    }
+                    else {
+                        log_message("Failed to import from JSON");
+                    }
+                }
+            }
+
+            function print_cmd (args) {
+                let nodes_list = "";
+
+                (function recurse (node) {
+                    if (node !== tree.focus) {
+                        let depth = 0;
+                        let n = node;
+                        let p = n.parent;
+                        while (p !== tree.focus && p !== null) {
+                            depth = depth + 1;
+                            n = p;
+                            p = n.parent;
+                        }
+                        for (let i = 0; i < depth; i++) {
+                            nodes_list = nodes_list + "&emsp;&emsp;";
+                        }
+                        nodes_list = nodes_list + `- ${node.title}\n`;
+                    }
+                    
+                    node.children.forEach(function(child) {
+                        recurse(child);
+                    });
+                })(tree.focus);
+
+                const txt = document.createElement('p');
+                txt.innerHTML = nodes_list;
+                stdout.insertBefore(txt, stdout.firstChild);
+
+                if (args[0] === "select") {
+                    let rng = document.createRange();
+                    rng.selectNode(stdout.firstChild);
+                    window.getSelection().addRange(rng);
+                    cli.blur();
+                }
+            }
+
+            function alias_cmd (args) {
+                const mode = args[0];
+                if (mode === 'add') {
+                    const alname = args[1];
+                    const cmname = args[2];
+                    if (alname !== undefined && cmname !== undefined) {
+                        aliases[alname] = cmname;
+                        log_message(`Added alias :::: ${alname} => ${cmname}`);
+                        localStorage.setItem('Golemaliases', JSON.stringify(aliases));
+                    }
+                    else {
+                        log_message("Invalid arguments");
+                    }
+                }
+                else if (mode === 'del') {
+                    const alname = args[1];
+                    if(alname !== undefined) {
+                        delete aliases[alname];
+                        log_message(`Deleted alias :::: ${alname}`);
+                        localStorage.setItem('Golemaliases', JSON.stringify(aliases));
+                    }
+                    else {
+                        log_message("Invalid arguments");
+                    }
+                }
+                else if (mode === 'list') {
+                    let al = "::::Aliases\n\n";
+
+                    for (const alias in aliases) {
+                        al = al + `${alias} => ${aliases[alias]}\n`
+                    }
+                    log_message(al);
+                }
+                else {
+                    log_message("Invalid arguments");
+                }
+            }
+
+            function reset_cmd (args) {
+                localStorage.clear();
+                tree = new Tree("Golem");
+                log_message("Removed all nodes");
+            }
+
+            function cls_cmd (args) {
+                stdout.innerHTML = "";
+            }
+
+            const commands = {
+                add: {
+                    target: add_cmd,
+                    help: ":::: add [text] ::::\ncreate a new node in the current list with the text passed as a parameter"
+                },
+                addf: {
+                    target: addf_cmd,
+                    help: ":::: add [text] ::::\ncreate a new node in the current list with the text passed as a parameter and move focus to the new node"
+                },
+                del: {
+                    target: del_cmd,
+                    help: ":::: del [node index] ::::\ndelete the node at the index passed as a parameter"
+                },
+                edit: {
+                    target: edit_cmd,
+                    help: ":::: edit [node index] [new text] ::::\nreplace the node text at index passed as first parameter by the text passed as second parameter"
+                },
+                cut: {
+                    target: cut_cmd,
+                    help: ":::: cut [node index || search pattern] ::::\ndelete the node at the index or containing the search pattern passed as a parameter and copy its contents (recursively) to the internal clipboard"
+                },
+                copy: {
+                    target: copy_cmd,
+                    help: ":::: copy [node index || search pattern] ::::\ncopy the contents of the node at the index or containing the serach pattern passed as a parameter (recursively) to the internal clipboard"
+                },
+                paste: {
+                    target: paste_cmd,
+                    help: ":::: paste ::::\nappend the contents of the internal clipboard to the current node"
+                },
+                list: {
+                    target: list_cmd,
+                    help: ":::: list ::::\nprint the contents of the current node to the console\nnodes which contain sub-nodes have a little indicator ([+]) after their index"
+                },
+                focus: {
+                    target: focus_cmd,
+                    help: ":::: focus [node index || search pattern] ::::\nset the root node to the index passed as a parameter or to the first node matching the search pattern passed as a parameter"
+                },
+                back: {
+                    target: back_cmd,
+                    help: ":::: back ::::\nmove back (up) in the hierarchy"
+                },
+                root: {
+                    target: root_cmd,
+                    help: ":::: root ::::\nmove back to the root node"
+                },
+                search: {
+                    target: search_cmd,
+                    help: ":::: search [pattern] ::::\nsearch (case insensitive) for pattern passed as a parameter"
+                },
+                up: {
+                    target: up_cmd,
+                    help: ":::: up [node index] [offset (optional)] ::::\nmove the node at index passed as first parameter up in the list by the offset passed as second parameter (defaults to 1 if offset is omitted)"
+                },
+                down: {
+                    target: down_cmd,
+                    help: ":::: down [node index] [offset (optional)] ::::\nmove the node at index passed as first parameter down in the list by the offset passed as second parameter (defaults to 1 if offset is omitted)"
+                },
+                print: {
+                    target: print_cmd,
+                    help: ":::: print [select (optional)]::::\nprint a flat list version of the currently focused node to the console\nif select is passed as an argument, the focus will move out of the command  prompt and the text will be automatically selected"
+                },
+                export: {
+                    target: export_cmd,
+                    help: ":::: export [alias (optional)] ::::\ndump the whole tree to the console as a JSON string that can be used with the import command\nif the alias argument is passed in it will dump the list of aliases as a JSON string"
+                },
+                import: {
+                    target: import_cmd,
+                    help: ":::: import [alias (optional)] [json string] ::::\nimport the JSON string (obtained via the export command) passed as an argument and replace the whole tree\nif the alias argument is passed in it will try to restore the alias list from the  JSON instead"
+                },
+                alias: {
+                    target: alias_cmd,
+                    help: ":::: alias [add || del || list] [alias name (optional)] [target command (optional)] ::::\nadd, delete or list command aliases\nalias add ls list => set the alias ls for the list command\nalias del ls => remove the alias ls\nalias list => print all registered aliases to the console"
+                },
+                reset: {
+                    target: reset_cmd,
+                    help: ":::: reset ::::\nremove all nodes (make sure to export before...)"
+                },
+                cls: {
+                    target: cls_cmd,
+                    help: ":::: cls ::::\nclear the console"
+                }
+            };
+
+
+            function print_help (cmd) {
+                if (commands.hasOwnProperty(cmd)) {
+                    log_message(commands[cmd].help);
+                }
+                else {
+                    log_message(`Type "help [command]" to get help about a specific command.\n\nPossible commands :\n\n${Object.keys(commands).join(" ")}\n\n`);
+                }
+            }
+
+            function run_command () {
+
+                const args = cli.value.split(" ");
+                let cmd = args[0];
+                args.splice(0, 1);
+
+                if (aliases.hasOwnProperty(cmd)) {
+                    cmd = aliases[cmd];
+                }
+
+                if (commands.hasOwnProperty(cmd)) {
+                    commands[cmd].target(args);
+                }
+                else if (cmd === "help") {
+                    print_help(args.join(" "));
+                }
+                else {
+                    log_message("Invalid command");
+                }
+
+
+                // save changes
+                localStorage.setItem('Golemtree', JSON.stringify(tree.root, function (key, value) {
+                    if (key === "parent") {
+                        return null;
+                    }
+                    else {
+                        return value;
+                    }
+                }));
+
+                // Clear command prompt
+                cli.value = "";
+
+            }
+
+
+
+            // startup
+            if (localStorage.getItem('Golemtree')) {
+                tree.root = JSON.parse(localStorage.getItem('Golemtree'));
+                tree.init_parents();
+                tree.focus = tree.root;
+            }
+
+            if (localStorage.getItem('Golemaliases')) {
+                aliases = JSON.parse(localStorage.getItem('Golemaliases'));
+            }
+
+            cli.value = "";
+            cli.addEventListener("keyup", function(event) {
+                if (event.key === "Enter") {
+                    run_command();
+                }
+            });
+
+            list_cmd();
+            log_message(`::::Golem version ${version}`);
+            cli.focus();
+        }
+
+
+        document.addEventListener('DOMContentLoaded', app);
+
+    </script>
+
+
+    <h1>::::Golem</h1>
+    <h2>Command driven outliner</h2>
+
+    <input type="text" id="cli" name="cli">
+
+    <p class="info"><em>Type a command and press <code>&lt;enter&gt;</code> to run.</em></p>
+    <p class="info"><em>Type <code>help</code> for addtional information.</em></p>
+
+    <pre id="stdout">
+    </pre>
+
+</body>
+</html>
