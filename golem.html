@@ -620,90 +620,112 @@ pre {
             const commands = {
                 add: {
                     target: add_cmd,
+                    mutating: true,
                     help: ":::: add [text] ::::\ncreate a new node in the current list with the text passed as a parameter"
                 },
                 addf: {
                     target: addf_cmd,
+                    mutating: true,
                     help: ":::: add [text] ::::\ncreate a new node in the current list with the text passed as a parameter and move focus to the new node"
                 },
                 del: {
                     target: del_cmd,
+                    mutating: true,
                     help: ":::: del [node index] ::::\ndelete the node at the index passed as a parameter"
                 },
                 edit: {
                     target: edit_cmd,
+                    mutating: true,
                     help: ":::: edit [node index] [new text] ::::\nreplace the node text at index passed as first parameter by the text passed as second parameter"
                 },
                 cut: {
                     target: cut_cmd,
+                    mutating: true,
                     help: ":::: cut [node index || search pattern] ::::\ndelete the node at the index or containing the search pattern passed as a parameter and copy its contents (recursively) to the internal clipboard"
                 },
                 copy: {
                     target: copy_cmd,
+                    mutating: false,
                     help: ":::: copy [node index || search pattern] ::::\ncopy the contents of the node at the index or containing the serach pattern passed as a parameter (recursively) to the internal clipboard"
                 },
                 paste: {
                     target: paste_cmd,
+                    mutating: true,
                     help: ":::: paste ::::\nappend the contents of the internal clipboard to the current node"
                 },
                 list: {
                     target: list_cmd,
+                    mutating: false,
                     help: ":::: list ::::\nprint the contents of the current node to the console\nnodes which contain sub-nodes have a little indicator ([+]) after their index"
                 },
                 focus: {
                     target: focus_cmd,
+                    mutating: false,
                     help: ":::: focus [node index || search pattern] ::::\nset the root node to the index passed as a parameter or to the first node matching the search pattern passed as a parameter"
                 },
                 back: {
                     target: back_cmd,
+                    mutating: false,
                     help: ":::: back ::::\nmove back (up) in the hierarchy"
                 },
                 root: {
                     target: root_cmd,
+                    mutating: false,
                     help: ":::: root ::::\nmove back to the root node"
                 },
                 search: {
                     target: search_cmd,
+                    mutating: false,
                     help: ":::: search [pattern] ::::\nsearch (case insensitive) for pattern passed as a parameter"
                 },
                 up: {
                     target: up_cmd,
+                    mutating: true,
                     help: ":::: up [node index] [offset (optional)] ::::\nmove the node at index passed as first parameter up in the list by the offset passed as second parameter (defaults to 1 if offset is omitted)"
                 },
                 down: {
                     target: down_cmd,
+                    mutating: true,
                     help: ":::: down [node index] [offset (optional)] ::::\nmove the node at index passed as first parameter down in the list by the offset passed as second parameter (defaults to 1 if offset is omitted)"
                 },
                 print: {
                     target: print_cmd,
+                    mutating: false,
                     help: ":::: print [select (optional)]::::\nprint a flat list version of the currently focused node to the console\nif select is passed as an argument, the focus will move out of the command  prompt and the text will be automatically selected"
                 },
                 export: {
                     target: export_cmd,
+                    mutating: false,
                     help: ":::: export [alias (optional)] ::::\ndump the whole tree to the console as a JSON string that can be used with the import command\nif the alias argument is passed in it will dump the list of aliases as a JSON string\nsee the exportf command to generate a JSON file"
                 },
                 exportf: {
                     target: exportf_cmd,
+                    mutating: false,
                     help: ":::: exportf [alias (optional)] ::::\ndump the whole tree as a JSON file that can be used with the importf command\nif the alias argument is passed in it will dump the list of aliases as a JSON string"
                 },
                 import: {
                     target: import_cmd,
+                    mutating: true,
                     help: ":::: import [alias (optional)] [json string] ::::\nimport the JSON string (obtained via the export command) passed as an argument and replace the whole tree\nif the alias argument is passed in it will try to restore the alias list from the  JSON instead\nto load the data from a json file, use the importf command"
                 },
                 importf: {
                     target: importf_cmd,
+                    mutating: true,
                     help: ":::: import [alias (optional)] ::::\nopen a file selection dialog and import the selected JSON file (obtained via the exportf command) replacing the whole tree\nif the alias argument is passed in it will try to restore the alias list from the JSON instead"
                 },
                 alias: {
                     target: alias_cmd,
+                    mutating: true,
                     help: ":::: alias [add || del || list] [alias name (optional)] [target command (optional)] ::::\nadd, delete or list command aliases\nalias add ls list => set the alias ls for the list command\nalias del ls => remove the alias ls\nalias list => print all registered aliases to the console"
                 },
                 reset: {
                     target: reset_cmd,
+                    mutating: true,
                     help: ":::: reset ::::\nremove all nodes (make sure to export before...)"
                 },
                 cls: {
                     target: cls_cmd,
+                    mutating: false,
                     help: ":::: cls ::::\nclear the console"
                 }
             };
@@ -730,6 +752,10 @@ pre {
 
                 if (commands.hasOwnProperty(cmd)) {
                     commands[cmd].target(args);
+                    // save changes if needed
+                    if (commands[cmd].mutating === true) {
+                        localStorage.setItem('Golemtree', serialize_tree());
+                    }
                 }
                 else if (cmd === "help") {
                     print_help(args.join(" "));
@@ -737,10 +763,6 @@ pre {
                 else {
                     log_message("Invalid command");
                 }
-
-
-                // save changes
-                localStorage.setItem('Golemtree', serialize_tree());
 
                 // Clear command prompt
                 cli.value = "";
