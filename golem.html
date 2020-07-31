@@ -418,6 +418,39 @@ pre {
                 cli.blur();
             }
 
+            function exportf_cmd (args) {
+                let mode = args[0];
+                let dump = "";
+                const date = new Date();
+                const year = date.getFullYear().toString();
+                const month = date.getMonth().toString();
+                const day = date.getDate().toString();
+                const hour = date.getHours().toString();
+                const minutes = date.getMinutes().toString();
+                let filename = year + "-" + month + "-" + day + "-" + hour + "-" + minutes + "-golem-";
+
+                if (mode === 'alias') {
+                    dump = JSON.stringify(aliases);
+                    filename = filename + "aliases.json";
+                }
+                else {
+                    dump = serialize_tree();
+                    filename = filename + "tree.json";
+                }
+
+                const blob = new Blob([dump], {type: "application/json"});
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                document.body.appendChild(a);
+                a.style = "display: none";
+                a.href = url;
+                a.download = filename;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.removeChild(a);
+            }
+
             function import_cmd (args) {
                 let mode = args[0];
 
@@ -596,7 +629,11 @@ pre {
                 },
                 export: {
                     target: export_cmd,
-                    help: ":::: export [alias (optional)] ::::\ndump the whole tree to the console as a JSON string that can be used with the import command\nif the alias argument is passed in it will dump the list of aliases as a JSON string"
+                    help: ":::: export [alias (optional)] ::::\ndump the whole tree to the console as a JSON string that can be used with the import command\nif the alias argument is passed in it will dump the list of aliases as a JSON string\nsee the exportf command to generate a JSON file"
+                },
+                exportf: {
+                    target: exportf_cmd,
+                    help: ":::: exportf [alias (optional)] ::::\ndump the whole tree as a JSON file that can be used with the importf command\nif the alias argument is passed in it will dump the list of aliases as a JSON string"
                 },
                 import: {
                     target: import_cmd,
