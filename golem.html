@@ -448,7 +448,7 @@ pre {
                 a.download = filename;
                 a.click();
                 window.URL.revokeObjectURL(url);
-                document.removeChild(a);
+                document.querySelector("body").removeChild(a);
             }
 
             function import_cmd (args) {
