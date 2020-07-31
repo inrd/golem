@@ -93,10 +93,16 @@ pre {
                 })(this.root, null);
             };
 
-            const version = "1.0";
+            const version = "1.1";
 
             const cli = document.getElementById("cli");
             const stdout = document.querySelector("#stdout");
+
+            const selector = document.createElement('input');
+            selector.type = "file";
+            selector.accept = ".json";
+            selector.addEventListener("change", handle_import_file, false);
+            let import_mode = "tree";
 
             let tree = new Tree("Golem");
             let clipboard = null;
@@ -165,6 +171,45 @@ pre {
                 tree.focus = tree.root;
             }
 
+
+            function handle_import_file () {
+
+                const file = selector.files[0];
+
+                const reader = new FileReader();
+                reader.addEventListener('load', function () {
+                    const data = reader.result;
+                    if (import_mode === 'alias') {
+                        const al = JSON.parse(data);
+                        if (al !== undefined) {
+                            aliases = al;
+                            localStorage.setItem('Golemaliases', JSON.stringify(aliases));
+                            log_message("Aliases imported from JSON");
+                        }
+                        else {
+                            log_message ("Failed to import from JSON");
+                        }
+                    }
+                    else {
+                        const new_tree = JSON.parse(data);
+                        if (new_tree !== undefined) {
+                            localStorage.clear();
+                            deserialize_tree(new_tree);
+                            list_cmd();
+                            log_message("JSON data imported");
+                        }
+                        else {
+                            log_message("Failed to import from JSON");
+                        }
+                    }
+                });
+
+                reader.readAsText(file);
+            }
+
+
+
+            // :::: Commands ::::
 
             function add_cmd (args) {
                 const t = args.join(" ");
@@ -482,6 +527,12 @@ pre {
                 }
             }
 
+
+            function importf_cmd (args) {
+                import_mode = args[0];
+                selector.click();
+            }
+
             function print_cmd (args) {
                 let nodes_list = "";
 
@@ -637,7 +688,11 @@ pre {
                 },
                 import: {
                     target: import_cmd,
-                    help: ":::: import [alias (optional)] [json string] ::::\nimport the JSON string (obtained via the export command) passed as an argument and replace the whole tree\nif the alias argument is passed in it will try to restore the alias list from the  JSON instead"
+                    help: ":::: import [alias (optional)] [json string] ::::\nimport the JSON string (obtained via the export command) passed as an argument and replace the whole tree\nif the alias argument is passed in it will try to restore the alias list from the  JSON instead\nto load the data from a json file, use the importf command"
+                },
+                importf: {
+                    target: importf_cmd,
+                    help: ":::: import [alias (optional)] ::::\nopen a file selection dialog and import the selected JSON file (obtained via the exportf command) replacing the whole tree\nif the alias argument is passed in it will try to restore the alias list from the JSON instead"
                 },
                 alias: {
                     target: alias_cmd,
