@@ -93,7 +93,7 @@ pre {
                 })(this.root, null);
             };
 
-            const version = "1.1";
+            const version = "1.1.1";
 
             const cli = document.getElementById("cli");
             const stdout = document.querySelector("#stdout");
@@ -468,7 +468,7 @@ pre {
                 let dump = "";
                 const date = new Date();
                 const year = date.getFullYear().toString();
-                const month = date.getMonth().toString();
+                const month = (date.getMonth() + 1).toString();
                 const day = date.getDate().toString();
                 const hour = date.getHours().toString();
                 const minutes = date.getMinutes().toString();
