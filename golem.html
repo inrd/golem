@@ -145,6 +145,27 @@ pre {
                 return p;
             }
 
+
+            function serialize_tree () {
+                const dump = JSON.stringify(tree.root, function (key, value) {
+                    if (key === "parent") {
+                        return null;
+                    }
+                    else {
+                        return value;
+                    }
+                });
+                return dump;
+            }
+
+
+            function deserialize_tree (json_data) {
+                tree.root = json_data;
+                tree.init_parents();
+                tree.focus = tree.root;
+            }
+
+
             function add_cmd (args) {
                 const t = args.join(" ");
                 tree.focus.children.push(new Node(t));
@@ -387,14 +408,7 @@ pre {
                     dump = JSON.stringify(aliases);
                 }
                 else {
-                    dump = JSON.stringify(tree.root, function (key, value) {
-                        if (key === "parent") {
-                            return null;
-                        }
-                        else {
-                            return value;
-                        }
-                    });
+                    dump = serialize_tree();
                 }
 
                 log_message(dump);
@@ -425,9 +439,7 @@ pre {
                     const new_tree = JSON.parse(data);
                     if (new_tree !== undefined) {
                         localStorage.clear();
-                        tree.root = new_tree;
-                        tree.init_parents();
-                        tree.focus = tree.root;
+                        deserialize_tree(new_tree);
                         list_cmd();
                         log_message("JSON data imported");
                     }
@@ -636,14 +648,7 @@ pre {
 
 
                 // save changes
-                localStorage.setItem('Golemtree', JSON.stringify(tree.root, function (key, value) {
-                    if (key === "parent") {
-                        return null;
-                    }
-                    else {
-                        return value;
-                    }
-                }));
+                localStorage.setItem('Golemtree', serialize_tree());
 
                 // Clear command prompt
                 cli.value = "";
@@ -654,9 +659,7 @@ pre {
 
             // startup
             if (localStorage.getItem('Golemtree')) {
-                tree.root = JSON.parse(localStorage.getItem('Golemtree'));
-                tree.init_parents();
-                tree.focus = tree.root;
+                deserialize_tree(JSON.parse(localStorage.getItem('Golemtree')));
             }
 
             if (localStorage.getItem('Golemaliases')) {
