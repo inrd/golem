@@ -93,7 +93,7 @@ pre {
                 })(this.root, null);
             };
 
-            const version = "1.1.1";
+            const version = "1.2";
 
             const cli = document.getElementById("cli");
             const stdout = document.querySelector("#stdout");
@@ -230,6 +230,7 @@ pre {
                 const t = args.join(" ");
                 tree.focus.children.push(new Node(t));
                 tree.focus.children[tree.focus.children.length - 1].parent = tree.focus;
+                list_cmd();
                 log_message(`New node :::: ${t}`); 
             }
 
@@ -246,6 +247,7 @@ pre {
                 if (!isNaN(nidx) && nidx < tree.focus.children.length) {
                     const t = tree.focus.children[nidx].title;
                     tree.focus.children.splice(nidx, 1);
+                    list_cmd();
                     log_message(`Deleted node :::: ${t}`); 
                 }
                 else {
@@ -260,6 +262,7 @@ pre {
                     const msg = args.join(" ");
                     const t = tree.focus.children[nidx].title;
                     tree.focus.children[nidx].title = msg;
+                    list_cmd();
                     log_message(`Edited node :::: ${t}\n=> ${msg}`); 
                 }
                 else {
@@ -272,6 +275,7 @@ pre {
                 if (nidx !== undefined && nidx < tree.focus.children.length) {
                     clipboard = tree.focus.children[nidx];
                     tree.focus.children.splice(nidx, 1);
+                    list_cmd();
                     log_message(`Cut node :::: ${clipboard.title}`); 
                 }
                 else {
@@ -294,6 +298,7 @@ pre {
                 if (clipboard !== null) {
                     tree.focus.children.push(clipboard);
                     tree.focus.children[tree.focus.children.length - 1].parent = tree.focus;
+                    list_cmd();
                     log_message(`Pasted node :::: ${clipboard.title}`); 
                 }
             }
