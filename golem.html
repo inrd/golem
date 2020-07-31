@@ -107,6 +107,8 @@ pre {
             let tree = new Tree("Golem");
             let clipboard = null;
             let aliases = {};
+            let history = [];
+            const undo_levels = 8;
 
             function log_message(msg) {
                 const log = document.createElement('p');
@@ -169,6 +171,19 @@ pre {
                 tree.root = json_data;
                 tree.init_parents();
                 tree.focus = tree.root;
+            }
+
+            function save_history () {
+                const data = serialize_tree();
+                history.push(data);
+                if (history.length > undo_levels) {
+                    history.shift();
+                }
+            }
+
+            function undo () {
+                const data = history.pop();
+                return data;
             }
 
 
@@ -445,6 +460,25 @@ pre {
                 }
             }
 
+
+            function undo_cmd (args) {
+                const json = undo();
+                if (json !== undefined) {
+                    const data = JSON.parse(json);
+                    if (data !== undefined) {
+                        deserialize_tree(data);
+                        list_cmd();
+                        log_message("Undo!");
+                    }
+                    else {
+                        log_message("Could not restore from action history");
+                    }
+                }
+                else {
+                    log_message("Action history is empty");
+                }
+            }
+
             function export_cmd (args) {
                 let mode = args[0];
                 let dump = "";
@@ -688,6 +722,11 @@ pre {
                     mutating: true,
                     help: ":::: down [node index] [offset (optional)] ::::\nmove the node at index passed as first parameter down in the list by the offset passed as second parameter (defaults to 1 if offset is omitted)"
                 },
+                undo: {
+                    target: undo_cmd,
+                    mutating: true,
+                    help: ":::: undo ::::\nrevert latest destructive action (will reset the focus to the root node)"
+                },
                 print: {
                     target: print_cmd,
                     mutating: false,
@@ -751,6 +790,10 @@ pre {
                 }
 
                 if (commands.hasOwnProperty(cmd)) {
+                    if (commands[cmd].mutating === true && cmd !== 'undo') {
+                        save_history();
+                    }
+
                     commands[cmd].target(args);
                     // save changes if needed
                     if (commands[cmd].mutating === true) {
