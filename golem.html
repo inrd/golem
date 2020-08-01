@@ -10,8 +10,13 @@
 <style>
 
 body {
-    color: #555;
+    background-color: #444;
+    color: #eee;
     font-family: arial, helvetica, serif;
+}
+
+h1, h2 {
+    display: none;
 }
 
 h2 {
@@ -29,30 +34,37 @@ img {
     max-height: 64px;
 }
 
-#cli {
-    width: 80%;
-    background-color: #444;
-    color: #eee;
-    height: 2em;
+#cli-container {
+    margin-top: 20px;
+    font-size: 16px;
     font-family: monospace;
-    margin-bottom: 1em;
+    padding-left: 1em;
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid #ccc;
 }
 
-p.info {
-    color: #777;
-    font-size: 0.8em;
-    margin-top: 2px;
-    margin-bottom: 2px;
+#cli {
+    width: 90%;
+    background-color: #444;
+    color: #eee;
+    font-size: 16px;
+    font-family: monospace;
+    margin-bottom: 0;
+    margin-left: 1em;
+    border: none;
+}
+
+#cli:focus {
+    outline: none;
 }
 
 pre {
-    margin-top: 4em;
+    margin-top: 0;
     background-color: #444;
     color: #eee;
     padding: 1em;
     height: auto;
     min-height: 400px;
-    max-height: 400px;
     overflow: auto;
     word-break: normal !important;
     word-wrap: normal !important;
@@ -103,7 +115,7 @@ pre > p {
                 })(this.root, null);
             };
 
-            const version = "1.4";
+            const version = "1.5";
 
             const cli = document.getElementById("cli");
             const stdout = document.querySelector("#stdout");
@@ -831,7 +843,7 @@ pre > p {
                     for (key in commands) {
                         cmd_list = cmd_list + `- <span style="color: ${golem_green};">${key}</span> => ` + `${commands[key].summary}\n`;  
                     }
-                    log_message(`Type "help [command]" to get help about a specific command.\n\nPossible commands :\n\n${cmd_list}\n\n`);
+                    log_message(`Press [CTRL-k] to focus the command line.\nType "help [command]" to get help about a specific command.\n\nPossible commands :\n\n${cmd_list}\n\n`);
                 }
             }
 
@@ -891,8 +903,15 @@ pre > p {
                 }
             });
 
+            document.addEventListener("keyup", function(event) {
+                if (event.key === "k" && event.ctrlKey) {
+                    cli.focus();
+                }
+            });
+
             list_cmd();
-            log_message(`::::Golem version ${version}`, "font-size: 1.1em;");
+            log_message("Enter &lt;help&gt; for more information")
+            log_message(`::::Golem v${version}`, "font-size: 1.2em;");
             cli.focus();
         }
 
@@ -905,10 +924,7 @@ pre > p {
     <h1>::::Golem</h1>
     <h2>Command driven outliner</h2>
 
-    <input type="text" id="cli" name="cli">
-
-    <p class="info"><em>Type a command and press <code>&lt;enter&gt;</code> to run.</em></p>
-    <p class="info"><em>Type <code>help</code> for addtional information.</em></p>
+    <p id="cli-container">$&gt;<input type="text" id="cli" name="cli"></p>
 
     <pre id="stdout">
     </pre>
