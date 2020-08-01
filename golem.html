@@ -678,7 +678,7 @@ pre {
                 add: {
                     target: add_cmd,
                     mutating: true,
-                    help: ":::: add [text] ::::\nappend a new node to the current list with the text passed as a parameter"
+                    help: ":::: add [text] ::::\nappend a new node to the current list with the content defined in [text]"
                 },
                 addp: {
                     target: addp_cmd,
@@ -688,27 +688,27 @@ pre {
                 addf: {
                     target: addf_cmd,
                     mutating: true,
-                    help: ":::: add [text] ::::\nappenda new node to the current list with the text passed as a parameter and move focus to the new node"
+                    help: ":::: add [text] ::::\nappenda new node to the current list with the content defined in [text] and move focus to the new node"
                 },
                 del: {
                     target: del_cmd,
                     mutating: true,
-                    help: ":::: del [node index] ::::\ndelete the node at the index passed as a parameter"
+                    help: ":::: del [node index] ::::\ndelete the node at [node index]"
                 },
                 edit: {
                     target: edit_cmd,
                     mutating: true,
-                    help: ":::: edit [node index] [new text] ::::\nreplace the node text at index passed as first parameter by the text passed as second parameter"
+                    help: ":::: edit [node index] [new text] ::::\nreplace the node text at [node index] by [new text]"
                 },
                 cut: {
                     target: cut_cmd,
                     mutating: true,
-                    help: ":::: cut [node index || search pattern] ::::\ndelete the node at the index or containing the search pattern passed as a parameter and copy its contents (recursively) to the internal clipboard"
+                    help: ":::: cut [node index || search pattern] ::::\ndelete the node at [node index] or containing [search pattern] and copy its contents (recursively) to the internal clipboard"
                 },
                 copy: {
                     target: copy_cmd,
                     mutating: false,
-                    help: ":::: copy [node index || search pattern] ::::\ncopy the contents of the node at the index or containing the serach pattern passed as a parameter (recursively) to the internal clipboard"
+                    help: ":::: copy [node index || search pattern] ::::\ncopy the contents (recursively) of the node at [node index] or containing [search pattern] to the internal clipboard"
                 },
                 paste: {
                     target: paste_cmd,
@@ -723,7 +723,7 @@ pre {
                 focus: {
                     target: focus_cmd,
                     mutating: false,
-                    help: ":::: focus [node index || search pattern] ::::\nset the root node to the index passed as a parameter or to the first node matching the search pattern passed as a parameter"
+                    help: ":::: focus [node index || search pattern] ::::\nset the root node to [node index] or to the first node matching [search pattern]"
                 },
                 back: {
                     target: back_cmd,
@@ -738,17 +738,17 @@ pre {
                 search: {
                     target: search_cmd,
                     mutating: false,
-                    help: ":::: search [pattern] ::::\nsearch (case insensitive) for pattern passed as a parameter"
+                    help: ":::: search [pattern] ::::\nsearch (case insensitive) the whole tree for [pattern]"
                 },
                 up: {
                     target: up_cmd,
                     mutating: true,
-                    help: ":::: up [node index] [offset (optional)] ::::\nmove the node at index passed as first parameter up in the list by the offset passed as second parameter (defaults to 1 if offset is omitted)"
+                    help: ":::: up [node index] [offset (optional)] ::::\nmove the node at [node index] up in the list by [offset] places (defaults to 1 if offset is omitted)"
                 },
                 down: {
                     target: down_cmd,
                     mutating: true,
-                    help: ":::: down [node index] [offset (optional)] ::::\nmove the node at index passed as first parameter down in the list by the offset passed as second parameter (defaults to 1 if offset is omitted)"
+                    help: ":::: down [node index] [offset (optional)] ::::\nmove the node at [node index] down in the list by [offset] places (defaults to 1 if offset is omitted)"
                 },
                 undo: {
                     target: undo_cmd,
