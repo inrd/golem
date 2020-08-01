@@ -24,6 +24,11 @@ a {
     color: #15c8ff;
 }
 
+img {
+    max-width: 64px;
+    max-height: 64px;
+}
+
 #cli {
     width: 80%;
     background-color: #444;
@@ -98,7 +103,7 @@ pre > p {
                 })(this.root, null);
             };
 
-            const version = "1.3";
+            const version = "1.4";
 
             const cli = document.getElementById("cli");
             const stdout = document.querySelector("#stdout");
@@ -109,15 +114,37 @@ pre > p {
             selector.addEventListener("change", handle_import_file, false);
             let import_mode = "tree";
 
+            const tmp = document.createElement('p');
+            tmp.style = "display:none;";
+
             let tree = new Tree("Golem");
             let clipboard = null;
             let aliases = {};
             let history = [];
             const undo_levels = 8;
 
+            function escape_html(msg) {
+                msg = msg.replace(/<script([\s\S]*?)<\/script>/gi, '');
+                return msg;
+            }
+
+            function convert_links(msg) {
+                let tokens = msg.split(" ");
+                tokens.forEach(function (token, index) {
+                    const exp = new RegExp("(^http:\/\/|^https:\/\/|^www.)");
+                    if (exp.test(token) === true) {
+                        const target = token;
+                        tokens[index] = '<a href="' + target + '">' + target + '</a>';
+                    }
+                });
+                return tokens.join(" ");
+            }
+
             function log_message(msg) {
                 const log = document.createElement('p');
-                log.textContent = msg;
+                msg = escape_html(msg);
+                msg = convert_links(msg);
+                log.innerHTML = msg;
                 stdout.insertBefore(log, stdout.firstChild);
             }
 
@@ -236,7 +263,6 @@ pre > p {
                 tree.focus.children.push(new Node(t));
                 tree.focus.children[tree.focus.children.length - 1].parent = tree.focus;
                 list_cmd();
-                log_message(`New node :::: ${t}`); 
             }
             
             function addp_cmd (args) {
@@ -253,7 +279,6 @@ pre > p {
                 tree.focus.children.splice(idx, 0, new Node(t));
                 tree.focus.children[idx].parent = tree.focus;
                 list_cmd();
-                log_message(`New node :::: ${t}`); 
             }
 
 
@@ -262,7 +287,7 @@ pre > p {
                 tree.focus.children.push(new Node(t));
                 tree.focus.children[tree.focus.children.length - 1].parent = tree.focus;
                 tree.focus = tree.focus.children[tree.focus.children.length - 1];
-                log_message(`Focus > New node :::: ${get_focus_path()}`); 
+                list_cmd();
             }
 
             function del_cmd (args) {
@@ -271,7 +296,6 @@ pre > p {
                     const t = tree.focus.children[nidx].title;
                     tree.focus.children.splice(nidx, 1);
                     list_cmd();
-                    log_message(`Deleted node :::: ${t}`); 
                 }
                 else {
                     log_message("Invalid node");
@@ -286,7 +310,6 @@ pre > p {
                     const t = tree.focus.children[nidx].title;
                     tree.focus.children[nidx].title = msg;
                     list_cmd();
-                    log_message(`Edited node :::: ${t}\n=> ${msg}`); 
                 }
                 else {
                     log_message("Invalid node");
@@ -322,7 +345,6 @@ pre > p {
                     tree.focus.children.push(clipboard);
                     tree.focus.children[tree.focus.children.length - 1].parent = tree.focus;
                     list_cmd();
-                    log_message(`Pasted node :::: ${clipboard.title}`); 
                 }
             }
 
@@ -347,20 +369,7 @@ pre > p {
                 const nidx = parse_index_args(args);
                 if (nidx !== undefined && nidx < tree.focus.children.length) {
                     tree.focus = tree.focus.children[nidx];
-                    let nl = `Focus => ${get_focus_path()}\n`;
-                    if (tree.focus.children.length === 0) {
-                        nl = nl + "Empty node...";
-                    }
-                    else {
-                        tree.focus.children.forEach(function(node, idx) {
-                            nl = nl + `${idx + 1}. `;
-                            if (node.children.length > 0) {
-                                nl = nl + "[+] ";
-                            }
-                            nl = nl + `${node.title}\n`;
-                        });
-                    }
-                    log_message(nl);
+                    list_cmd();
                 }
                 else {
                     log_message("Invalid node");
@@ -370,20 +379,7 @@ pre > p {
             function back_cmd (args)  {
                 if (tree.focus.parent !== null) {
                     tree.focus = tree.focus.parent;
-                    let nl = `Focus => ${get_focus_path()}\n`;
-                    if (tree.focus.children.length === 0) {
-                        nl = nl + "Empty node...";
-                    }
-                    else {
-                        tree.focus.children.forEach(function(node, idx) {
-                            nl = nl + `${idx + 1}. `;
-                            if (node.children.length > 0) {
-                                nl = nl + "[+] ";
-                            }
-                            nl = nl + `${node.title}\n`;
-                        });
-                    }
-                    log_message(nl);
+                    list_cmd();
                 }
                 else {
                     log_message("Already at root...");
@@ -393,20 +389,7 @@ pre > p {
             function root_cmd (args) {
                 if (tree.focus !== tree.root) {
                     tree.focus = tree.root;
-                    let nl = `Focus => ${get_focus_path()}\n`;
-                    if (tree.focus.children.length === 0) {
-                        nl = nl + "Empty node...";
-                    }
-                    else {
-                        tree.focus.children.forEach(function(node, idx) {
-                            nl = nl + `${idx + 1}. `;
-                            if (node.children.length > 0) {
-                                nl = nl + "[+] ";
-                            }
-                            nl = nl + `${node.title}\n`;
-                        });
-                    }
-                    log_message(nl);
+                    list_cmd();
                 }
                 else {
                     log_message("Already at root...");
@@ -611,7 +594,10 @@ pre > p {
                         for (let i = 0; i < depth; i++) {
                             nodes_list = nodes_list + "&emsp;&emsp;";
                         }
-                        nodes_list = nodes_list + `- ${node.title}\n`;
+                        tmp.innerHTML = `${node.title}`;
+                        const plain_title = tmp.textContent;
+                        tmp.textContent = "";
+                        nodes_list = nodes_list + `- ${plain_title}\n`;
                     }
                     
                     node.children.forEach(function(child) {
