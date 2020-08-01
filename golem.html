@@ -678,121 +678,145 @@ pre {
                 add: {
                     target: add_cmd,
                     mutating: true,
+                    summary: "append new node",
                     help: ":::: add [text] ::::\nappend a new node to the current list with the content defined in [text]"
                 },
                 addp: {
                     target: addp_cmd,
                     mutating: true,
+                    summary: "insert new node at index",
                     help: ":::: addp [index] [text] ::::\ninsert a new node in the current list at [index] with the content defined in [text]"
                 },
                 addf: {
                     target: addf_cmd,
                     mutating: true,
+                    summary: "append new node and focus it",
                     help: ":::: add [text] ::::\nappenda new node to the current list with the content defined in [text] and move focus to the new node"
                 },
                 del: {
                     target: del_cmd,
                     mutating: true,
+                    summary: "delete node at index",
                     help: ":::: del [node index] ::::\ndelete the node at [node index]"
                 },
                 edit: {
                     target: edit_cmd,
                     mutating: true,
+                    summary: "edit node at index",
                     help: ":::: edit [node index] [new text] ::::\nreplace the node text at [node index] by [new text]"
                 },
                 cut: {
                     target: cut_cmd,
                     mutating: true,
+                    summary: "cut node at index",
                     help: ":::: cut [node index || search pattern] ::::\ndelete the node at [node index] or containing [search pattern] and copy its contents (recursively) to the internal clipboard"
                 },
                 copy: {
                     target: copy_cmd,
                     mutating: false,
+                    summary: "copy node at index",
                     help: ":::: copy [node index || search pattern] ::::\ncopy the contents (recursively) of the node at [node index] or containing [search pattern] to the internal clipboard"
                 },
                 paste: {
                     target: paste_cmd,
                     mutating: true,
+                    summary: "paste node",
                     help: ":::: paste ::::\nappend the contents of the internal clipboard to the current node"
                 },
                 list: {
                     target: list_cmd,
                     mutating: false,
+                    summary: "list contents of current node",
                     help: ":::: list ::::\nprint the contents of the current node to the console\nnodes which contain sub-nodes have a little indicator ([+]) after their index"
                 },
                 focus: {
                     target: focus_cmd,
                     mutating: false,
+                    summary: "bring focus to a specific node",
                     help: ":::: focus [node index || search pattern] ::::\nset the root node to [node index] or to the first node matching [search pattern]"
                 },
                 back: {
                     target: back_cmd,
                     mutating: false,
+                    summary: "move up in the tree",
                     help: ":::: back ::::\nmove back (up) in the hierarchy"
                 },
                 root: {
                     target: root_cmd,
                     mutating: false,
+                    summary: "move to the tree root",
                     help: ":::: root ::::\nmove back to the root node"
                 },
                 search: {
                     target: search_cmd,
                     mutating: false,
+                    summary: "search expression in the whole tree",
                     help: ":::: search [pattern] ::::\nsearch (case insensitive) the whole tree for [pattern]"
                 },
                 up: {
                     target: up_cmd,
                     mutating: true,
+                    summary: "move node up in the list",
                     help: ":::: up [node index] [offset (optional)] ::::\nmove the node at [node index] up in the list by [offset] places (defaults to 1 if offset is omitted)"
                 },
                 down: {
                     target: down_cmd,
                     mutating: true,
+                    summary: "move node down in the list",
                     help: ":::: down [node index] [offset (optional)] ::::\nmove the node at [node index] down in the list by [offset] places (defaults to 1 if offset is omitted)"
                 },
                 undo: {
                     target: undo_cmd,
                     mutating: true,
+                    summary: "undo previous destructive action",
                     help: ":::: undo ::::\nrevert latest destructive action (will reset the focus to the root node)"
                 },
                 print: {
                     target: print_cmd,
                     mutating: false,
+                    summary: "print plain text subtree of the current node",
                     help: ":::: print [select (optional)]::::\nprint a flat list version of the currently focused node to the console\nif select is passed as an argument, the focus will move out of the command  prompt and the text will be automatically selected"
                 },
                 export: {
                     target: export_cmd,
                     mutating: false,
+                    summary: "dump the whole tree or the aliases list to the console as a JSON string",
                     help: ":::: export [alias (optional)] ::::\ndump the whole tree to the console as a JSON string that can be used with the import command\nif the alias argument is passed in it will dump the list of aliases as a JSON string\nsee the exportf command to generate a JSON file"
                 },
                 exportf: {
                     target: exportf_cmd,
                     mutating: false,
+                    summary: "dump the whole tree or the aliases list to a JSON file",
                     help: ":::: exportf [alias (optional)] ::::\ndump the whole tree as a JSON file that can be used with the importf command\nif the alias argument is passed in it will dump the list of aliases as a JSON string"
                 },
                 import: {
                     target: import_cmd,
                     mutating: true,
+                    summary: "import the whole tree or the aliases list from a JSON string",
                     help: ":::: import [alias (optional)] [json string] ::::\nimport the JSON string (obtained via the export command) passed as an argument and replace the whole tree\nif the alias argument is passed in it will try to restore the alias list from the  JSON instead\nto load the data from a json file, use the importf command"
                 },
                 importf: {
                     target: importf_cmd,
                     mutating: true,
+                    summary: "import the whole tree or the aliases list from a JSON file",
                     help: ":::: import [alias (optional)] ::::\nopen a file selection dialog and import the selected JSON file (obtained via the exportf command) replacing the whole tree\nif the alias argument is passed in it will try to restore the alias list from the JSON instead"
                 },
                 alias: {
                     target: alias_cmd,
                     mutating: true,
+                    summary: "define or delete an alias for a command, or list registered aliases",
                     help: ":::: alias [add || del || list] [alias name (optional)] [target command (optional)] ::::\nadd, delete or list command aliases\nalias add ls list => set the alias ls for the list command\nalias del ls => remove the alias ls\nalias list => print all registered aliases to the console"
                 },
                 reset: {
                     target: reset_cmd,
                     mutating: true,
+                    summary: "remove all nodes from the tree",
                     help: ":::: reset ::::\nremove all nodes (make sure to export before...)"
                 },
                 cls: {
                     target: cls_cmd,
                     mutating: false,
+                    summary: "clear the console",
                     help: ":::: cls ::::\nclear the console"
                 }
             };
@@ -803,7 +827,11 @@ pre {
                     log_message(commands[cmd].help);
                 }
                 else {
-                    log_message(`Type "help [command]" to get help about a specific command.\n\nPossible commands :\n\n${Object.keys(commands).join(" ")}\n\n`);
+                    let cmd_list = "";
+                    for (key in commands) {
+                        cmd_list = cmd_list + `- ${key} => ` + `${commands[key].summary}\n`;  
+                    }
+                    log_message(`Type "help [command]" to get help about a specific command.\n\nPossible commands :\n\n${cmd_list}\n\n`);
                 }
             }
 
