@@ -630,7 +630,8 @@ pre {
                 const mode = args[0];
                 if (mode === 'add') {
                     const alname = args[1];
-                    const cmname = args[2];
+                    args.splice(0, 2);
+                    const cmname = args.join(" ");
                     if (alname !== undefined && cmname !== undefined) {
                         aliases[alname] = cmname;
                         log_message(`Added alias :::: ${alname} => ${cmname}`);
@@ -805,7 +806,7 @@ pre {
                     target: alias_cmd,
                     mutating: true,
                     summary: "define or delete an alias for a command, or list registered aliases",
-                    help: ":::: alias [add || del || list] [alias name (optional)] [target command (optional)] ::::\nadd, delete or list command aliases\nalias add ls list => set the alias ls for the list command\nalias del ls => remove the alias ls\nalias list => print all registered aliases to the console"
+                    help: ":::: alias [add || del || list] [alias name (optional)] [target command (optional)] ::::\nadd, delete or list command aliases\nalias add ls list => set the alias ls for the list command\nalias add prepend addp 1 => set the alias prepend for the addp command with argument 1\nalias del ls => remove the alias ls\nalias list => print all registered aliases to the console"
                 },
                 reset: {
                     target: reset_cmd,
@@ -837,13 +838,18 @@ pre {
 
             function run_command () {
 
-                const args = cli.value.split(" ");
+                let args = cli.value.split(" ");
                 let cmd = args[0];
-                args.splice(0, 1);
 
                 if (aliases.hasOwnProperty(cmd)) {
                     cmd = aliases[cmd];
                 }
+
+                args.shift();
+                let unrolled = cmd + " " + args.join(" ");
+                args = unrolled.split(" ");
+                cmd = args[0]
+                args.shift();
 
                 if (commands.hasOwnProperty(cmd)) {
                     if (commands[cmd].mutating === true && cmd !== 'undo') {
