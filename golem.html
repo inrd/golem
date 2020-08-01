@@ -54,6 +54,11 @@ pre {
     white-space: pre-line !important;
 }
 
+pre > p {
+    line-height: 1.2em;
+    margin-bottom: 2em;
+}
+
 
 </style>
 <body>
@@ -93,7 +98,7 @@ pre {
                 })(this.root, null);
             };
 
-            const version = "1.2";
+            const version = "1.3";
 
             const cli = document.getElementById("cli");
             const stdout = document.querySelector("#stdout");
