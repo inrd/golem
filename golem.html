@@ -123,6 +123,9 @@ pre > p {
             let history = [];
             const undo_levels = 8;
 
+            const error_style = "color: #fa8072;";
+            const golem_green = "#90ee90";
+
             function escape_html(msg) {
                 msg = msg.replace(/<script([\s\S]*?)<\/script>/gi, '');
                 return msg;
@@ -140,8 +143,11 @@ pre > p {
                 return tokens.join(" ");
             }
 
-            function log_message(msg) {
+            function log_message(msg, style) {
                 const log = document.createElement('p');
+                if (style !== undefined) {
+                    log.style = style;
+                }
                 msg = escape_html(msg);
                 msg = convert_links(msg);
                 log.innerHTML = msg;
@@ -234,7 +240,7 @@ pre > p {
                             log_message("Aliases imported from JSON");
                         }
                         else {
-                            log_message ("Failed to import from JSON");
+                            log_message ("Failed to import from JSON", error_style);
                         }
                     }
                     else {
@@ -246,7 +252,7 @@ pre > p {
                             log_message("JSON data imported");
                         }
                         else {
-                            log_message("Failed to import from JSON");
+                            log_message("Failed to import from JSON", error_style);
                         }
                     }
                 });
@@ -268,7 +274,7 @@ pre > p {
             function addp_cmd (args) {
                 let idx = parseInt(args[0] - 1);
                 if (idx === undefined) {
-                    log_message("Invalid index");
+                    log_message("Invalid index", error_style);
                     return;
                 }
                 args.shift();
@@ -298,7 +304,7 @@ pre > p {
                     list_cmd();
                 }
                 else {
-                    log_message("Invalid node");
+                    log_message("Invalid node", error_style);
                 }
             }
 
@@ -312,7 +318,7 @@ pre > p {
                     list_cmd();
                 }
                 else {
-                    log_message("Invalid node");
+                    log_message("Invalid node", error_style);
                 }
             }
 
@@ -325,7 +331,7 @@ pre > p {
                     log_message(`Cut node :::: ${clipboard.title}`); 
                 }
                 else {
-                    log_message("Invalid node");
+                    log_message("Invalid node", error_style);
                 }
             }
 
@@ -336,7 +342,7 @@ pre > p {
                     log_message(`Copied node :::: ${clipboard.title}`); 
                 }
                 else {
-                    log_message("Invalid node");
+                    log_message("Invalid node", error_style);
                 }
             }
 
@@ -372,7 +378,7 @@ pre > p {
                     list_cmd();
                 }
                 else {
-                    log_message("Invalid node");
+                    log_message("Invalid node", error_style);
                 }
             }
 
@@ -382,7 +388,7 @@ pre > p {
                     list_cmd();
                 }
                 else {
-                    log_message("Already at root...");
+                    log_message("Already at root...", error_style);
                 }
             }
 
@@ -392,7 +398,7 @@ pre > p {
                     list_cmd();
                 }
                 else {
-                    log_message("Already at root...");
+                    log_message("Already at root...", error_style);
                 }
             }
 
@@ -437,11 +443,11 @@ pre > p {
                         list_cmd();
                     }
                     else {
-                        log_message("Invalid node");
+                        log_message("Invalid node", error_style);
                     }
                 }
                 else {
-                    log_message("Missing arguments");
+                    log_message("Missing arguments", error_style);
                 }
             }
 
@@ -463,11 +469,11 @@ pre > p {
                         list_cmd();
                     }
                     else {
-                        log_message("Invalid node");
+                        log_message("Invalid node", error_style);
                     }
                 }
                 else {
-                    log_message("Missing arguments");
+                    log_message("Missing arguments", error_style);
                 }
             }
 
@@ -479,14 +485,14 @@ pre > p {
                     if (data !== undefined) {
                         deserialize_tree(data);
                         list_cmd();
-                        log_message("Undo!");
+                        log_message("Undo!", error_style);
                     }
                     else {
-                        log_message("Could not restore from action history");
+                        log_message("Could not restore from action history", error_style);
                     }
                 }
                 else {
-                    log_message("Action history is empty");
+                    log_message("Action history is empty", error_style);
                 }
             }
 
@@ -554,7 +560,7 @@ pre > p {
                         log_message("Aliases imported from JSON");
                     }
                     else {
-                        log_message ("Failed to import from JSON");
+                        log_message ("Failed to import from JSON", error_style);
                     }
                 }
                 else {
@@ -567,7 +573,7 @@ pre > p {
                         log_message("JSON data imported");
                     }
                     else {
-                        log_message("Failed to import from JSON");
+                        log_message("Failed to import from JSON", error_style);
                     }
                 }
             }
@@ -629,7 +635,7 @@ pre > p {
                         localStorage.setItem('Golemaliases', JSON.stringify(aliases));
                     }
                     else {
-                        log_message("Invalid arguments");
+                        log_message("Invalid arguments", error_style);
                     }
                 }
                 else if (mode === 'del') {
@@ -640,7 +646,7 @@ pre > p {
                         localStorage.setItem('Golemaliases', JSON.stringify(aliases));
                     }
                     else {
-                        log_message("Invalid arguments");
+                        log_message("Invalid arguments", error_style);
                     }
                 }
                 else if (mode === 'list') {
@@ -652,14 +658,16 @@ pre > p {
                     log_message(al);
                 }
                 else {
-                    log_message("Invalid arguments");
+                    log_message("Invalid arguments", error_style);
                 }
             }
 
             function reset_cmd (args) {
                 localStorage.clear();
                 tree = new Tree("Golem");
-                log_message("Removed all nodes");
+                log_message("Removed all nodes", error_style);
+                cls_cmd();
+                list_cmd();
             }
 
             function cls_cmd (args) {
@@ -816,12 +824,12 @@ pre > p {
 
             function print_help (cmd) {
                 if (commands.hasOwnProperty(cmd)) {
-                    log_message(commands[cmd].help);
+                    log_message(commands[cmd].help, `color: ${golem_green};`);
                 }
                 else {
                     let cmd_list = "";
                     for (key in commands) {
-                        cmd_list = cmd_list + `- ${key} => ` + `${commands[key].summary}\n`;  
+                        cmd_list = cmd_list + `- <span style="color: ${golem_green};">${key}</span> => ` + `${commands[key].summary}\n`;  
                     }
                     log_message(`Type "help [command]" to get help about a specific command.\n\nPossible commands :\n\n${cmd_list}\n\n`);
                 }
@@ -857,7 +865,7 @@ pre > p {
                     print_help(args.join(" "));
                 }
                 else {
-                    log_message("Invalid command");
+                    log_message("Invalid command", error_style);
                 }
 
                 // Clear command prompt
@@ -884,7 +892,7 @@ pre > p {
             });
 
             list_cmd();
-            log_message(`::::Golem version ${version}`);
+            log_message(`::::Golem version ${version}`, "font-size: 1.1em;");
             cli.focus();
         }
 
