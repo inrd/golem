@@ -115,7 +115,7 @@ pre > p {
                 })(this.root, null);
             };
 
-            const version = "1.5";
+            const version = "1.5.1";
 
             const cli = document.getElementById("cli");
             const stdout = document.querySelector("#stdout");
@@ -339,8 +339,8 @@ pre > p {
                 if (nidx !== undefined && nidx < tree.focus.children.length) {
                     clipboard = tree.focus.children[nidx];
                     tree.focus.children.splice(nidx, 1);
-                    list_cmd();
                     log_message(`Cut node :::: ${clipboard.title}`); 
+                    list_cmd();
                 }
                 else {
                     log_message("Invalid node", error_style);
