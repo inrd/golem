@@ -117,7 +117,7 @@ pre > p {
                 })(this.root, null);
             };
 
-            const version = "1.5.1";
+            const version = "1.6";
 
             const cli = document.getElementById("cli");
             const stdout = document.querySelector("#stdout");
@@ -370,6 +370,7 @@ pre > p {
 
             function list_cmd (args) {
                 let nl = `::::${get_focus_path()}\n`;
+                let styling = undefined;
                 if (tree.focus.children.length === 0) {
                     nl = nl + "Empty node...";
                 }
@@ -380,10 +381,11 @@ pre > p {
                         if (node.children.length > 0) {
                         nl = nl + `<span ${meta_style}>[+]</span> `;
                         }
-                        nl = nl + `${node.title}\n`;
+                        nl = nl + `${node.title} \n`;
                     });
+                    styling = "background-color: #333; padding: 1em;";
                 }
-                log_message(nl);
+                styling !== undefined ? log_message(nl, styling) : log_message(nl);
             }
 
             function focus_cmd (args) {
