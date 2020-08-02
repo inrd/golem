@@ -372,12 +372,13 @@ pre > p {
                     nl = nl + "Empty node...";
                 }
                 else {
+                    const meta_style = 'style="color: #7fffd4;"';
                     tree.focus.children.forEach(function(node, idx) {
-                        nl = nl + `${idx + 1}. `;
+                        nl = nl + `<span ${meta_style}>${idx + 1}.</span> `;
                         if (node.children.length > 0) {
-                            nl = nl + "[+] ";
+                        nl = nl + `<span ${meta_style}>[+]</span> `;
                         }
-                        nl = nl + `${node.title} \n`;
+                        nl = nl + `${node.title}\n`;
                     });
                 }
                 log_message(nl);
