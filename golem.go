@@ -2,10 +2,13 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -14,45 +17,79 @@ import (
 const version = "2.0"
 
 type Node struct {
-	text     string
+	Text     string
 	parent   *Node
-	children []*Node
+	Children []*Node
 }
 
 func (n *Node) String() string {
-	if len(n.children) > 0 {
-		return fmt.Sprintf("[+] %v", n.text)
+	if len(n.Children) > 0 {
+		return fmt.Sprintf("[+] %v", n.Text)
 	}
-	return n.text
+	return n.Text
 }
 
 type Tree struct {
-	root  *Node
+	Root  *Node
 	focus *Node
 }
 
 func createNode(text string, parent *Node) *Node {
-	n := Node{text: text, parent: parent}
+	n := Node{Text: text, parent: parent}
 	return &n
 }
 
 func initTree(txt string) *Tree {
 	n := createNode(txt, nil)
-	t := Tree{root: n, focus: n}
+	t := Tree{Root: n, focus: n}
 	return &t
 }
 
 func recurse(n *Node, callback func(*Node)) {
-	if n.children != nil {
-		for i, _ := range n.children {
-			recurse(n.children[i], callback)
+	if n.Children != nil {
+		for i, _ := range n.Children {
+			recurse(n.Children[i], callback)
 		}
 	}
 	callback(n)
 }
 
+func recurseAndSetParent(n *Node, p *Node) {
+	if n.Children != nil {
+		for i, _ := range n.Children {
+			recurseAndSetParent(n.Children[i], n)
+		}
+	}
+	n.parent = p
+}
+
 func (t *Tree) traverse(callback func(*Node)) {
-	recurse(t.root, callback)
+	recurse(t.Root, callback)
+}
+
+func (t *Tree) initParents() {
+	recurseAndSetParent(t.Root, nil)
+}
+
+func (t *Tree) serialize() []byte {
+	data, err := json.Marshal(t)
+	if err != nil {
+		printError(err.Error())
+		return nil
+	}
+	return data
+}
+
+func (t *Tree) deserialize(data []byte) *Tree {
+	tmp := Tree{}
+	err := json.Unmarshal(data, &tmp)
+	if err != nil {
+		printError(err.Error())
+		return nil
+	}
+	tmp.initParents()
+	tmp.focus = tmp.Root
+	return &tmp
 }
 
 func (t *Tree) getFocusPath() string {
@@ -62,10 +99,35 @@ func (t *Tree) getFocusPath() string {
 	p := ""
 	np := t.focus
 	for np.parent != nil {
-		p = fmt.Sprintf("/%v%v", np.text, p)
+		p = fmt.Sprintf("/%v%v", np.Text, p)
 		np = np.parent
 	}
 	return p
+}
+
+func (t *Tree) saveToFile(path string) {
+	data := t.serialize()
+	if data != nil {
+		err := ioutil.WriteFile(path, t.serialize(), 0644)
+		if err != nil {
+			printError(err.Error())
+		}
+	}
+}
+
+func (t *Tree) restoreFromFile(path string) *Tree {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		printError(err.Error())
+		return nil
+	} else {
+		tp := t.deserialize(data)
+		if tp == nil {
+			printError("Error parsing data")
+			return nil
+		}
+		return tp
+	}
 }
 
 /*TODO
@@ -88,8 +150,8 @@ func parseIndexArgs(args []string, t *Tree) (int, error) {
 		// argument is a search pattern
 		patt := strings.Join(args, " ")
 		ipatt := fmt.Sprintf("(?i)%v", patt)
-		for i, c := range t.focus.children {
-			match, err := regexp.MatchString(ipatt, c.text)
+		for i, c := range t.focus.Children {
+			match, err := regexp.MatchString(ipatt, c.Text)
 			if err != nil {
 				return -1, err
 			}
@@ -105,10 +167,10 @@ func parseIndexArgs(args []string, t *Tree) (int, error) {
 
 func listFocusedNode(t *Tree) {
 	fmt.Printf("\n::::%v\n", t.getFocusPath())
-	if len(t.focus.children) == 0 {
+	if len(t.focus.Children) == 0 {
 		printError("Empty node...")
 	} else {
-		for i, n := range t.focus.children {
+		for i, n := range t.focus.Children {
 			fmt.Println(i+1, ". ", n)
 		}
 	}
@@ -116,7 +178,7 @@ func listFocusedNode(t *Tree) {
 
 func addCommand(args []string, t *Tree) bool {
 	txt := strings.Join(args, " ")
-	t.focus.children = append(t.focus.children, createNode(txt, t.focus))
+	t.focus.Children = append(t.focus.Children, createNode(txt, t.focus))
 	listFocusedNode(t)
 	return true
 }
@@ -126,8 +188,8 @@ func focusCommand(args []string, t *Tree) bool {
 	if err != nil {
 		printError(err.Error())
 	} else {
-		if idx >= 0 && idx < len(t.focus.children) {
-			t.focus = t.focus.children[idx]
+		if idx >= 0 && idx < len(t.focus.Children) {
+			t.focus = t.focus.Children[idx]
 			listFocusedNode(t)
 		} else {
 			printError("Inavlid node")
@@ -148,7 +210,7 @@ func backCommand(args []string, t *Tree) bool {
 
 func rootCommand(args []string, t *Tree) bool {
 	if t.focus.parent != nil {
-		t.focus = t.root
+		t.focus = t.Root
 		listFocusedNode(t)
 	} else {
 		printError("Already at root...")
@@ -160,6 +222,7 @@ type Command struct {
 	name     string
 	help     string
 	callback func([]string, *Tree) bool
+	mutator  bool
 }
 
 var commands = []Command{
@@ -170,26 +233,31 @@ var commands = []Command{
 			listFocusedNode(t)
 			return true
 		},
+		mutator: false,
 	},
 	{
 		name:     "add",
-		help:     "adds a node", //TODO: fix help text
+		help:     "adds a node", //TODO: fix help.Text
 		callback: addCommand,
+		mutator:  true,
 	},
 	{
 		name:     "focus",
-		help:     "focus a node", //TODO: fix help text
+		help:     "focus a node", //TODO: fix help.Text
 		callback: focusCommand,
+		mutator:  false,
 	},
 	{
 		name:     "back",
-		help:     "go back in tree", //TODO: fix help text
+		help:     "go back in tree", //TODO: fix help.Text
 		callback: backCommand,
+		mutator:  false,
 	},
 	{
 		name:     "root",
-		help:     "go to tree root", //TODO: fix help text
+		help:     "go to tree root", //TODO: fix help.Text
 		callback: rootCommand,
+		mutator:  false,
 	},
 	{
 		name: "exit",
@@ -197,14 +265,44 @@ var commands = []Command{
 		callback: func([]string, *Tree) bool {
 			return false
 		},
+		mutator: false,
 	},
 }
 
 func main() {
-	tree := initTree("Golem")
+	var tree *Tree
+
+	const golemDirName = ".golem"
+	golemDirPath := filepath.Join(os.Getenv("HOME"), golemDirName)
+	_, derr := os.Stat(golemDirPath)
+	if os.IsNotExist(derr) {
+		dcerr := os.Mkdir(golemDirPath, 0755)
+		if dcerr != nil {
+			printError(dcerr.Error())
+		}
+	}
+
+	const golemTreeFileName = "tree.json"
+	golemTreeFilePath := filepath.Join(golemDirPath, golemTreeFileName)
+
+	fmt.Println("\n::::Golem v", version)
+
+	_, perr := os.Stat(golemTreeFilePath)
+	if os.IsNotExist(perr) {
+		tree = initTree("Golem")
+		tree.saveToFile(golemTreeFilePath)
+	} else {
+		tree = tree.restoreFromFile(golemTreeFilePath)
+		if tree == nil {
+			tree = initTree("Golem")
+		} else {
+			listFocusedNode(tree)
+		}
+	}
+
 	//TODO: var aliases []Alias
 
-	const prompt = "$> "
+	const prompt = "\n$> "
 	scanner := bufio.NewScanner(os.Stdin)
 
 	fmt.Printf(prompt)
@@ -217,6 +315,9 @@ func main() {
 		for i, c := range commands {
 			if c.name == cmd[0] {
 				running = commands[i].callback(cmd[1:], tree)
+				if c.mutator {
+					tree.saveToFile(golemTreeFilePath)
+				}
 				found = true
 				break
 			}
@@ -225,7 +326,7 @@ func main() {
 			printError("Invalid Command")
 		}
 		if !running {
-			fmt.Println("Goodbye!")
+			fmt.Println("\nGoodbye!\n")
 			break
 		}
 		fmt.Printf("\n%v", prompt)
