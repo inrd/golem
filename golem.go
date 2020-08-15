@@ -183,6 +183,21 @@ func addCommand(args []string, t *Tree) bool {
 	return true
 }
 
+func delCommand(args []string, t *Tree) bool {
+	idx, err := parseIndexArgs(args, t)
+	if err != nil {
+		printError(err.Error())
+	} else {
+		if idx >= 0 && idx < len(t.focus.Children) {
+            t.focus.Children = append(t.focus.Children[:idx], t.focus.Children[idx + 1:]...)
+			listFocusedNode(t)
+		} else {
+			printError("Inavlid node")
+		}
+	}
+	return true
+}
+
 func focusCommand(args []string, t *Tree) bool {
 	idx, err := parseIndexArgs(args, t)
 	if err != nil {
@@ -237,25 +252,31 @@ var commands = []Command{
 	},
 	{
 		name:     "add",
-		help:     "adds a node", //TODO: fix help.Text
+		help:     "adds a node", //TODO: fix help text
 		callback: addCommand,
 		mutator:  true,
 	},
+    {
+        name: "del",
+        help: "deletes a node", //TODO: fix help text
+        callback: delCommand,
+        mutator: true,
+    },
 	{
 		name:     "focus",
-		help:     "focus a node", //TODO: fix help.Text
+		help:     "focus a node", //TODO: fix help text
 		callback: focusCommand,
 		mutator:  false,
 	},
 	{
 		name:     "back",
-		help:     "go back in tree", //TODO: fix help.Text
+		help:     "go back in tree", //TODO: fix help text
 		callback: backCommand,
 		mutator:  false,
 	},
 	{
 		name:     "root",
-		help:     "go to tree root", //TODO: fix help.Text
+		help:     "go to tree root", //TODO: fix help text
 		callback: rootCommand,
 		mutator:  false,
 	},
