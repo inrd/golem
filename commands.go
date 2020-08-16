@@ -91,6 +91,13 @@ var Commands = []Command{
 		mutator:  false,
 	},
 	{
+		name:     "search",
+		summary:  "search expression in the whole tree",
+		help:     ":::: search [regexp] ::::\nsearch (case insensitive) the whole tree for [regexp]",
+		callback: searchCommand,
+		mutator:  false,
+	},
+	{
 		name:     "undo",
 		summary:  "undo previous destructive action",
 		help:     ":::: undo ::::\nrevert latest destructive action (will reset the focus to the root node)",
@@ -319,6 +326,57 @@ func rootCommand(args []string, t *Tree) bool {
 	} else {
 		PrintError("Already at root...")
 	}
+	return true
+}
+
+func recursiveSearch(n *Node, pattern *regexp.Regexp, results *[]string, callback func(*Node, *regexp.Regexp, *[]string)) {
+	if n.Children != nil {
+		for i, _ := range n.Children {
+			recursiveSearch(n.Children[i], pattern, results, callback)
+		}
+	}
+	callback(n, pattern, results)
+}
+
+func searchNode(n *Node, pattern *regexp.Regexp, results *[]string) {
+	match := pattern.MatchString(n.Text)
+	if match {
+		var s string
+		if n.parent == nil {
+			s = fmt.Sprintf("/%v", n.Text)
+		} else {
+			t := n
+			for t.parent != nil {
+				s = fmt.Sprintf("/%v%v", t.Text, s)
+				t = t.parent
+			}
+		}
+		*results = append(*results, fmt.Sprintf("=> %v", s))
+	}
+}
+
+func searchCommand(args []string, t *Tree) bool {
+	if checkArgs(args, 1) == false {
+		return true
+	}
+	var results []string
+	pattern := strings.Join(args, " ")
+	ipatt := fmt.Sprintf("(?i)%v", pattern)
+	re, err := regexp.Compile(ipatt)
+	if err != nil {
+		PrintError(err.Error())
+		return true
+	}
+	recursiveSearch(t.Root, re, &results, searchNode)
+	if len(results) < 1 {
+		PrintError("Pattern not found")
+	} else {
+		fmt.Printf("\n%v occurences found : \n\n", len(results))
+		for _, s := range results {
+			fmt.Println(s)
+		}
+	}
+
 	return true
 }
 
