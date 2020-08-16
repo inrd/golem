@@ -50,36 +50,41 @@ func main() {
 		running := true
 		found := false
 
-		for _, c := range Commands {
-			if c.name == cmd[0] {
+		if cmd[0] == "help" {
+			HelpCommand(cmd[1:])
+			found = true
+		} else {
+			for _, c := range Commands {
+				if c.name == cmd[0] {
 
-				if c.mutator {
-					if c.name != "undo" {
-						PushToHistory(tree.serialize())
-					}
-				}
-
-				if c.name == "undo" {
-					data := Undo()
-					if data == nil {
-						PrintError("Nothing to undo")
-					} else {
-						tmp := tree.deserialize(data)
-						if tmp == nil {
-							PrintError("Unable to restore state")
-						} else {
-							tree = tmp
-							listFocusedNode(tree)
+					if c.mutator {
+						if c.name != "undo" {
+							PushToHistory(tree.serialize())
 						}
 					}
-				} else {
-					running = c.callback(cmd[1:], tree)
+
+					if c.name == "undo" {
+						data := Undo()
+						if data == nil {
+							PrintError("Nothing to undo")
+						} else {
+							tmp := tree.deserialize(data)
+							if tmp == nil {
+								PrintError("Unable to restore state")
+							} else {
+								tree = tmp
+								listFocusedNode(tree)
+							}
+						}
+					} else {
+						running = c.callback(cmd[1:], tree)
+					}
+					if c.mutator {
+						tree.SaveToFile(golemTreeFilePath)
+					}
+					found = true
+					break
 				}
-				if c.mutator {
-					tree.SaveToFile(golemTreeFilePath)
-				}
-				found = true
-				break
 			}
 		}
 		if !found {
@@ -89,6 +94,7 @@ func main() {
 			break
 		}
 		fmt.Printf("\n%v", prompt)
+
 	}
 
 	err = scanner.Err()

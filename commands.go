@@ -321,3 +321,24 @@ func rootCommand(args []string, t *Tree) bool {
 	}
 	return true
 }
+
+func HelpCommand(args []string) {
+	if len(args) > 0 {
+		found := false
+		for _, c := range Commands {
+			if args[0] == c.name {
+				fmt.Printf("\n%v", c.help)
+				found = true
+				break
+			}
+		}
+		if found == false {
+			PrintError("Invalid command name")
+		}
+	} else {
+		fmt.Printf("\nType 'help [command]' to get help about a specific command.\n\nPossible commands :\n\n")
+		for _, c := range Commands {
+			fmt.Printf("* %v => %v\n", c.name, c.summary)
+		}
+	}
+}
