@@ -56,6 +56,13 @@ var Commands = []Command{
 		mutator:  true,
 	},
 	{
+		name:     "move",
+		summary:  "move a node inside the current list",
+		help:     ":::: move [node index || search pattern] [target index] ::::\nmove the node at [node index] or the first node matching [serach pattern] to [target index] in the current list, shifting the other nodes",
+		callback: moveCommand,
+		mutator:  true,
+	},
+	{
 		name:     "focus",
 		summary:  "bring focus to a specific node",
 		help:     ":::: focus [node index || search pattern] ::::\nset the root node to [node index] or to the first node matching [search pattern]",
@@ -204,6 +211,51 @@ func delCommand(args []string, t *Tree) bool {
 			PrintError("Inavlid node")
 		}
 	}
+	return true
+}
+
+func moveCommand(args []string, t *Tree) bool {
+	if checkArgs(args, 2) == false {
+		return true
+	}
+	posArg := args[:1]
+	idx, perr := parseIndexArgs(posArg, t)
+	dest, oerr := strconv.Atoi(args[1])
+
+	if perr != nil {
+		PrintError(perr.Error())
+		return true
+	}
+	if oerr != nil {
+		PrintError(oerr.Error())
+		return true
+	}
+	if idx < 0 || idx >= len(t.focus.Children) {
+		PrintError("Invalid node")
+		return true
+	}
+
+	dest -= 1
+	if dest < 0 {
+		dest = 0
+	} else if dest >= len(t.focus.Children) {
+		dest = len(t.focus.Children) - 1
+	}
+
+	if idx < dest {
+		tmp := append([]*Node{}, t.focus.Children[:idx]...)
+		tmp = append(tmp, t.focus.Children[idx+1:dest+1]...)
+		tmp = append(tmp, t.focus.Children[idx])
+		tmp = append(tmp, t.focus.Children[dest+1:]...)
+		t.focus.Children = tmp
+	} else if idx > dest {
+		tmp := append([]*Node{}, t.focus.Children[:dest]...)
+		tmp = append(tmp, t.focus.Children[idx])
+		tmp = append(tmp, t.focus.Children[dest:idx]...)
+		tmp = append(tmp, t.focus.Children[idx+1:]...)
+		t.focus.Children = tmp
+	}
+	listFocusedNode(t)
 	return true
 }
 
