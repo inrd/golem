@@ -8,10 +8,19 @@ import (
 	"strings"
 )
 
+type Command struct {
+	name     string
+	summary  string
+	help     string
+	callback func([]string, *Tree) bool
+	mutator  bool
+}
+
 var Commands = []Command{
 	{
-		name: "list",
-		help: "prints contents of current node",
+		name:    "list",
+		summary: "list contents of current node",
+		help:    ":::: list ::::\nprint the contents of the current node to the console\nnodes which contain sub-nodes have a little indicator ([+]) after their index",
 		callback: func(args []string, t *Tree) bool {
 			listFocusedNode(t)
 			return true
@@ -20,37 +29,43 @@ var Commands = []Command{
 	},
 	{
 		name:     "add",
-		help:     "adds a node", //TODO: fix help text
+		summary:  "append new node",
+		help:     ":::: add [text] ::::\nappend a new node to the current list with the content defined in [text]",
 		callback: addCommand,
 		mutator:  true,
 	},
 	{
 		name:     "del",
-		help:     "deletes a node", //TODO: fix help text
+		summary:  "delete node at index",
+		help:     ":::: del [node index] ::::\ndelete the node at [node index]",
 		callback: delCommand,
 		mutator:  true,
 	},
 	{
 		name:     "focus",
-		help:     "focus a node", //TODO: fix help text
+		summary:  "bring focus to a specific node",
+		help:     ":::: focus [node index || search pattern] ::::\nset the root node to [node index] or to the first node matching [search pattern]",
 		callback: focusCommand,
 		mutator:  false,
 	},
 	{
 		name:     "back",
-		help:     "go back in tree", //TODO: fix help text
+		summary:  "move up in the tree",
+		help:     ":::: back ::::\nmove back (up) in the hierarchy",
 		callback: backCommand,
 		mutator:  false,
 	},
 	{
 		name:     "root",
-		help:     "go to tree root", //TODO: fix help text
+		summary:  "move to the tree root",
+		help:     ":::: root ::::\nmove back to the root node",
 		callback: rootCommand,
 		mutator:  false,
 	},
 	{
-		name: "exit",
-		help: "quits the program",
+		name:    "exit",
+		summary: "exit Golem",
+		help:    ":::: exit ::::\nexit Golem",
 		callback: func([]string, *Tree) bool {
 			return false
 		},
@@ -152,11 +167,4 @@ func rootCommand(args []string, t *Tree) bool {
 		PrintError("Already at root...")
 	}
 	return true
-}
-
-type Command struct {
-	name     string
-	help     string
-	callback func([]string, *Tree) bool
-	mutator  bool
 }
