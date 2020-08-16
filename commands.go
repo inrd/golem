@@ -95,7 +95,7 @@ var Commands = []Command{
 }
 
 func PrintError(msg string) {
-	fmt.Printf("\n%v\n", msg)
+	fmt.Printf("\n%v", msg)
 }
 
 func parseIndexArgs(args []string, t *Tree) (int, error) {
