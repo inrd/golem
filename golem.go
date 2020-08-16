@@ -52,7 +52,29 @@ func main() {
 
 		for _, c := range Commands {
 			if c.name == cmd[0] {
-				running = c.callback(cmd[1:], tree)
+
+				if c.mutator {
+					if c.name != "undo" {
+						PushToHistory(tree.serialize())
+					}
+				}
+
+				if c.name == "undo" {
+					data := Undo()
+					if data == nil {
+						PrintError("Nothing to undo")
+					} else {
+						tmp := tree.deserialize(data)
+						if tmp == nil {
+							PrintError("Unable to restore state")
+						} else {
+							tree = tmp
+							listFocusedNode(tree)
+						}
+					}
+				} else {
+					running = c.callback(cmd[1:], tree)
+				}
 				if c.mutator {
 					tree.SaveToFile(golemTreeFilePath)
 				}

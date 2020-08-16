@@ -84,6 +84,13 @@ var Commands = []Command{
 		mutator:  false,
 	},
 	{
+		name:     "undo",
+		summary:  "undo previous destructive action",
+		help:     ":::: undo ::::\nrevert latest destructive action (will reset the focus to the root node)",
+		callback: nil, // special case : handled in main()
+		mutator:  true,
+	},
+	{
 		name:    "exit",
 		summary: "exit Golem",
 		help:    ":::: exit ::::\nexit Golem",
