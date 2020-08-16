@@ -3,6 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -103,6 +106,13 @@ var Commands = []Command{
 		help:     ":::: undo ::::\nrevert latest destructive action (will reset the focus to the root node)",
 		callback: nil, // special case : handled in main()
 		mutator:  true,
+	},
+	{
+		name:     "export",
+		summary:  "export plain text subtree of the current node",
+		help:     "::::export [filename]::::\nwrite a plain text version of the currently focused node to [filename]",
+		callback: exportCommand,
+		mutator:  false,
 	},
 	{
 		name:    "exit",
@@ -377,6 +387,59 @@ func searchCommand(args []string, t *Tree) bool {
 		}
 	}
 
+	return true
+}
+
+// BUG : does not work properly from root node (seems to work fine otherwise)
+func recursiveDump(n *Node, txt *string, focus *Node, callback func(*Node, *string, *Node)) {
+	if n.Children != nil {
+		for i, _ := range n.Children {
+			recursiveDump(n.Children[i], txt, focus, callback)
+		}
+	}
+	callback(n, txt, focus)
+}
+
+func dumpNode(n *Node, txt *string, focus *Node) {
+	if n != focus {
+		depth := 0
+		np := n
+		p := np.parent
+		for p != focus && p != nil {
+			depth += 1
+			np = p
+			p = np.parent
+		}
+		for i := 0; i < depth; i++ {
+			*txt = fmt.Sprintf("%v  ", *txt)
+		}
+		*txt = fmt.Sprintf("%v- %v\n", *txt, n.Text)
+	}
+}
+
+func exportCommand(args []string, t *Tree) bool {
+
+	if checkArgs(args, 1) == false {
+		return true
+	}
+
+	var dump string
+	recursiveDump(t.focus, &dump, t.focus, dumpNode)
+
+	dir, err := os.Getwd()
+	if err != nil {
+		PrintError(err.Error())
+		return true
+	}
+
+	path := filepath.Join(dir, args[0])
+
+	err = ioutil.WriteFile(path, []byte(dump), 0644)
+	if err != nil {
+		PrintError(err.Error())
+	} else {
+		fmt.Printf("\nWrote plain text subtree to %v", path)
+	}
 	return true
 }
 
