@@ -86,7 +86,6 @@ func main() {
 			PrintError("Invalid Command")
 		}
 		if !running {
-			fmt.Println("\nGoodbye!\n")
 			break
 		}
 		fmt.Printf("\n%v", prompt)
