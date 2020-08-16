@@ -35,6 +35,13 @@ var Commands = []Command{
 		mutator:  true,
 	},
 	{
+		name:     "edit",
+		summary:  "edit node at index",
+		help:     ":::: edit [node index] [new text] ::::\nreplace the node text at [node index] by [new text]",
+		callback: editCommand,
+		mutator:  true,
+	},
+	{
 		name:     "del",
 		summary:  "delete node at index",
 		help:     ":::: del [node index] ::::\ndelete the node at [node index]",
@@ -101,6 +108,15 @@ func parseIndexArgs(args []string, t *Tree) (int, error) {
 	}
 }
 
+func checkArgs(args []string, minLength int) bool {
+	if len(args) < minLength {
+		PrintError("Missing arguments")
+		return false
+	} else {
+		return true
+	}
+}
+
 func listFocusedNode(t *Tree) {
 	fmt.Printf("\n::::%v\n", t.GetFocusPath())
 	if len(t.Focus().Children) == 0 {
@@ -113,9 +129,32 @@ func listFocusedNode(t *Tree) {
 }
 
 func addCommand(args []string, t *Tree) bool {
+	if checkArgs(args, 1) == false {
+		return true
+	}
 	txt := strings.Join(args, " ")
 	t.Focus().Children = append(t.Focus().Children, CreateNode(txt, t.Focus()))
 	listFocusedNode(t)
+	return true
+}
+
+func editCommand(args []string, t *Tree) bool {
+	if checkArgs(args, 2) == false {
+		return true
+	}
+	posArg := args[:1]
+	txt := strings.Join(args[1:], " ")
+	idx, err := parseIndexArgs(posArg, t)
+	if err != nil {
+		PrintError(err.Error())
+	} else {
+		if idx >= 0 && idx < len(t.focus.Children) {
+			t.focus.Children[idx].Text = txt
+			listFocusedNode(t)
+		} else {
+			PrintError("Inavlid node")
+		}
+	}
 	return true
 }
 
@@ -135,6 +174,9 @@ func delCommand(args []string, t *Tree) bool {
 }
 
 func focusCommand(args []string, t *Tree) bool {
+	if checkArgs(args, 1) == false {
+		return true
+	}
 	idx, err := parseIndexArgs(args, t)
 	if err != nil {
 		PrintError(err.Error())
