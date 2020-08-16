@@ -82,18 +82,6 @@ func (t *Tree) deserialize(data []byte) *Tree {
 	return &tmp
 }
 
-func (t *Tree) Focus() *Node {
-	return t.focus
-}
-
-func (t *Tree) SetFocus(n *Node) {
-	t.focus = n
-}
-
-func (n *Node) Parent() *Node {
-	return n.parent
-}
-
 func (t *Tree) GetFocusPath() string {
 	if t.focus.parent == nil {
 		return "/"

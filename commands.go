@@ -35,6 +35,13 @@ var Commands = []Command{
 		mutator:  true,
 	},
 	{
+		name:     "insert",
+		summary:  "insert new node at index",
+		help:     ":::: insert [index] [text] ::::\ninsert a new node in the current list at [index] with the content defined in [text]",
+		callback: insertCommand,
+		mutator:  true,
+	},
+	{
 		name:     "edit",
 		summary:  "edit node at index",
 		help:     ":::: edit [node index] [new text] ::::\nreplace the node text at [node index] by [new text]",
@@ -93,7 +100,7 @@ func parseIndexArgs(args []string, t *Tree) (int, error) {
 		// argument is a search pattern
 		patt := strings.Join(args, " ")
 		ipatt := fmt.Sprintf("(?i)%v", patt)
-		for i, c := range t.Focus().Children {
+		for i, c := range t.focus.Children {
 			match, err := regexp.MatchString(ipatt, c.Text)
 			if err != nil {
 				return -1, err
@@ -119,10 +126,10 @@ func checkArgs(args []string, minLength int) bool {
 
 func listFocusedNode(t *Tree) {
 	fmt.Printf("\n::::%v\n", t.GetFocusPath())
-	if len(t.Focus().Children) == 0 {
+	if len(t.focus.Children) == 0 {
 		PrintError("Empty node...")
 	} else {
-		for i, n := range t.Focus().Children {
+		for i, n := range t.focus.Children {
 			fmt.Println(i+1, ". ", n)
 		}
 	}
@@ -133,8 +140,35 @@ func addCommand(args []string, t *Tree) bool {
 		return true
 	}
 	txt := strings.Join(args, " ")
-	t.Focus().Children = append(t.Focus().Children, CreateNode(txt, t.Focus()))
+	t.focus.Children = append(t.focus.Children, CreateNode(txt, t.focus))
 	listFocusedNode(t)
+	return true
+}
+
+func insertCommand(args []string, t *Tree) bool {
+	if checkArgs(args, 2) == false {
+		return true
+	}
+	posArg := args[:1]
+	txt := strings.Join(args[1:], " ")
+	idx, err := parseIndexArgs(posArg, t)
+	if err != nil {
+		PrintError(err.Error())
+	} else {
+		if idx <= 0 {
+			tmp := t.focus.Children
+			t.focus.Children = append([]*Node{}, CreateNode(txt, t.focus))
+			t.focus.Children = append(t.focus.Children, tmp...)
+		} else if idx >= len(t.focus.Children) {
+			t.focus.Children = append(t.focus.Children, CreateNode(txt, t.focus))
+		} else {
+			tmp := append([]*Node{}, t.focus.Children[:idx]...)
+			tmp = append(tmp, CreateNode(txt, t.focus))
+			tmp = append(tmp, t.focus.Children[idx:]...)
+			t.focus.Children = tmp
+		}
+		listFocusedNode(t)
+	}
 	return true
 }
 
