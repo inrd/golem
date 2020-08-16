@@ -35,6 +35,13 @@ var Commands = []Command{
 		mutator:  true,
 	},
 	{
+		name:     "tree",
+		summary:  "append new node and focus it",
+		help:     ":::: tree [text] ::::\nappenda new node to the current list with the content defined in [text] and move focus to the new node",
+		callback: treeCommand,
+		mutator:  true,
+	},
+	{
 		name:     "insert",
 		summary:  "insert new node at index",
 		help:     ":::: insert [index] [text] ::::\ninsert a new node in the current list at [index] with the content defined in [text]",
@@ -155,6 +162,17 @@ func addCommand(args []string, t *Tree) bool {
 	}
 	txt := strings.Join(args, " ")
 	t.focus.Children = append(t.focus.Children, CreateNode(txt, t.focus))
+	listFocusedNode(t)
+	return true
+}
+
+func treeCommand(args []string, t *Tree) bool {
+	if checkArgs(args, 1) == false {
+		return true
+	}
+	txt := strings.Join(args, " ")
+	t.focus.Children = append(t.focus.Children, CreateNode(txt, t.focus))
+	t.focus = t.focus.Children[len(t.focus.Children)-1]
 	listFocusedNode(t)
 	return true
 }
