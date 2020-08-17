@@ -7,6 +7,7 @@ import (
 
 const golemDirName = ".golem"
 const golemTreeFileName = "tree.json"
+const aliasesFileName = "aliases"
 
 // Returns the Golem directory path
 func InitGolemDir() string {
@@ -23,4 +24,8 @@ func InitGolemDir() string {
 
 func TreeFilePath(golemDirPath string) string {
 	return filepath.Join(golemDirPath, golemTreeFileName)
+}
+
+func AliasesFilePath(golemDirPath string) string {
+	return filepath.Join(golemDirPath, aliasesFileName)
 }

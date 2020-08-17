@@ -129,6 +129,13 @@ var Commands = []Command{
 		mutator:  false,
 	},
 	{
+		name:     "alias",
+		summary:  "list registered command aliases",
+		help:     ":::: alias ::::\nprint a list of the registered aliases\naliases can be edited in $HOME/.golem/aliases",
+		callback: aliasCommand,
+		mutator:  false,
+	},
+	{
 		name:    "exit",
 		summary: "exit Golem",
 		help:    ":::: exit ::::\nexit Golem",
@@ -511,5 +518,17 @@ func pasteCommand(args []string, t *Tree) bool {
 	t.focus.Children = append(t.focus.Children, clipboard)
 	clipboard = nil
 	listFocusedNode(t)
+	return true
+}
+
+func aliasCommand([]string, *Tree) bool {
+	if len(Aliases) == 0 {
+		PrintError("No aliases registered")
+	} else {
+		fmt.Printf("\n")
+		for al, cmd := range Aliases {
+			fmt.Printf("* %v => %v\n", al, cmd)
+		}
+	}
 	return true
 }

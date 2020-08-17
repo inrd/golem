@@ -38,7 +38,7 @@ func main() {
 		}
 	}
 
-	//TODO: var aliases []Alias
+	RestoreAliases(AliasesFilePath(golemDirPath))
 
 	const prompt = "\n$> "
 	scanner := bufio.NewScanner(os.Stdin)
@@ -46,7 +46,7 @@ func main() {
 	fmt.Printf(prompt)
 	for scanner.Scan() {
 		ln := scanner.Text()
-		cmd := strings.Fields(ln)
+		cmd := SubstituteAlias(strings.Fields(ln))
 		running := true
 		found := false
 
