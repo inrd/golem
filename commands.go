@@ -411,14 +411,13 @@ func searchCommand(args []string, t *Tree) bool {
 	return true
 }
 
-// BUG : does not work properly from root node (seems to work fine otherwise)
 func recursiveDump(n *Node, txt *string, focus *Node, callback func(*Node, *string, *Node)) {
+	callback(n, txt, focus)
 	if n.Children != nil {
 		for i, _ := range n.Children {
 			recursiveDump(n.Children[i], txt, focus, callback)
 		}
 	}
-	callback(n, txt, focus)
 }
 
 func dumpNode(n *Node, txt *string, focus *Node) {
