@@ -1,16 +1,33 @@
 # :::: Golem  
 
-## A command driven outliner.
+A command driven outliner.
 
-::::Golem is a self contained offline application : simply open a local copy of golem.html in your web browser to use it.
+## Installation
 
-You can also use it [directly online](https://morfondre.com/software/golem.html).
+If you have installed Go  : `go build && go install`
 
-All data is saved in the browser localStorage so **make sure to use the `export` or `exportf` commands on a regular basis** to keep a backup of your tree. If you clear the browser cache or move the golem.html file to a new location, all data will be lost.
+## Basic Usage
 
-You can also render either the whole tree or a subtree using the `print` command to keep a plain text backup.
+Run `golem` from the command line. It will open a prompt where you can enter commands to manipulate the tree.
 
-Inside ::::Golem, run `help` to get an overview of the available commands.
+Inside Golem, run `help` to get an overview of the available commands.
 
-This software was developed for my personal use case so there may be some rough edges.
+Some basic commands to get started :
+
+- `add some item` : add a new node with the text "some item" to the current list.
+- `focus 1` : move the focus to the node at index 1. Displays the subtree of node 1.
+- `back`: move up by one level in the tree hierarchy.
+- `root`: go back to the root node of the tree (where the program starts by default).
+- `del 3` : delete the node at index 3.
+- `list`: list content of the currently focused node
+- `search something`: search the expression "something" in the whole tree.
+- `undo`: undo previous destructive action.
+- `export tree.txt` : export the focused tree as a plain text to the file `tree.txt`
+
+Golem stores its data in `$HOME/.golem/`. The whole tree is stored in `tree.json`. An `aliases` file can be edited to alias command patterns.
+
+## Legacy version
+
+Golem was first developed as an offline browser application. After some regular use I found this too cumbersome so I rewrote it to be a command line tool. You can still find the old html version in `legacy/`.
+
 
