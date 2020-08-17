@@ -27,7 +27,11 @@ func RestoreAliases(aliasesFilePath string) {
 
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
-			fields := strings.Fields(scanner.Text())
+            ln := scanner.Text()
+            if len(ln) < 2 {
+                continue
+            }
+			fields := strings.Fields(ln)
 			if fields[0] != "#" {
 				Aliases[fields[0]] = strings.Join(fields[1:], " ")
 			}
