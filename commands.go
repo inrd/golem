@@ -189,7 +189,7 @@ func listFocusedNode(t *Tree) {
 		PrintError("Empty node...")
 	} else {
 		for i, n := range t.focus.Children {
-			fmt.Println(i+1, ". ", n)
+			fmt.Println(i+1, n)
 		}
 	}
 }
