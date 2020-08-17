@@ -73,6 +73,20 @@ var Commands = []Command{
 		mutator:  true,
 	},
 	{
+		name:     "cut",
+		summary:  "cut node at index",
+		help:     ":::: cut [node index || search pattern] ::::\ndelete the node at [node index] or containing [search pattern] and copy its contents (recursively) to the internal clipboard",
+		callback: cutCommand,
+		mutator:  true,
+	},
+	{
+		name:     "paste",
+		summary:  "paste node",
+		help:     ":::: paste ::::\nappend the contents of the internal clipboard to the current list\nPasting a node purges the clipboard.",
+		callback: pasteCommand,
+		mutator:  true,
+	},
+	{
 		name:     "focus",
 		summary:  "bring focus to a specific node",
 		help:     ":::: focus [node index || search pattern] ::::\nset the root node to [node index] or to the first node matching [search pattern]",
@@ -462,4 +476,40 @@ func HelpCommand(args []string) {
 			fmt.Printf("* %v => %v\n", c.name, c.summary)
 		}
 	}
+}
+
+var clipboard *Node
+
+func cutCommand(args []string, t *Tree) bool {
+	if checkArgs(args, 1) == false {
+		return true
+	}
+	idx, err := parseIndexArgs(args, t)
+	if err != nil {
+		PrintError(err.Error())
+		return true
+	}
+	if idx < 0 || idx >= len(t.focus.Children) {
+		PrintError("Invalid node")
+		return true
+	} else {
+		clipboard = t.focus.Children[idx]
+		clipboard.parent = nil
+		t.focus.Children = append(t.focus.Children[:idx], t.focus.Children[idx+1:]...)
+		fmt.Printf("\nNode [%v] copied to the internal clipboard\n", clipboard.Text)
+		listFocusedNode(t)
+	}
+	return true
+}
+
+func pasteCommand(args []string, t *Tree) bool {
+	if clipboard == nil {
+		PrintError("Nothing to paste...")
+		return true
+	}
+	clipboard.parent = t.focus
+	t.focus.Children = append(t.focus.Children, clipboard)
+	clipboard = nil
+	listFocusedNode(t)
+	return true
 }
