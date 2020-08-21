@@ -183,6 +183,14 @@ func checkArgs(args []string, minLength int) bool {
 	}
 }
 
+func isValidChildIndex(idx int, n *Node) bool {
+	if idx < 0 || idx >= len(n.Children) {
+		PrintError("Invalid Node")
+		return false
+	}
+	return true
+}
+
 func listFocusedNode(t *Tree) {
 	fmt.Printf("\n::::%v\n", t.GetFocusPath())
 	if len(t.focus.Children) == 0 {
@@ -252,11 +260,9 @@ func editCommand(args []string, t *Tree) bool {
 	if err != nil {
 		PrintError(err.Error())
 	} else {
-		if idx >= 0 && idx < len(t.focus.Children) {
+		if isValidChildIndex(idx, t.focus) {
 			t.focus.Children[idx].Text = txt
 			listFocusedNode(t)
-		} else {
-			PrintError("Inavlid node")
 		}
 	}
 	return true
@@ -267,11 +273,9 @@ func delCommand(args []string, t *Tree) bool {
 	if err != nil {
 		PrintError(err.Error())
 	} else {
-		if idx >= 0 && idx < len(t.focus.Children) {
+		if isValidChildIndex(idx, t.focus) {
 			t.focus.Children = append(t.focus.Children[:idx], t.focus.Children[idx+1:]...)
 			listFocusedNode(t)
-		} else {
-			PrintError("Inavlid node")
 		}
 	}
 	return true
@@ -293,8 +297,7 @@ func moveCommand(args []string, t *Tree) bool {
 		PrintError(oerr.Error())
 		return true
 	}
-	if idx < 0 || idx >= len(t.focus.Children) {
-		PrintError("Invalid node")
+	if isValidChildIndex(idx, t.focus) == false {
 		return true
 	}
 
@@ -330,11 +333,9 @@ func focusCommand(args []string, t *Tree) bool {
 	if err != nil {
 		PrintError(err.Error())
 	} else {
-		if idx >= 0 && idx < len(t.focus.Children) {
+		if isValidChildIndex(idx, t.focus) {
 			t.focus = t.focus.Children[idx]
 			listFocusedNode(t)
-		} else {
-			PrintError("Inavlid node")
 		}
 	}
 	return true
@@ -495,7 +496,7 @@ func cutCommand(args []string, t *Tree) bool {
 		PrintError(err.Error())
 		return true
 	}
-	if idx < 0 || idx >= len(t.focus.Children) {
+	if isValidChildIndex(idx, t.focus) == false {
 		PrintError("Invalid node")
 		return true
 	} else {
