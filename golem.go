@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-const version = "2.0"
+const version = "2.0.1"
 
 /*TODO
 type Alias struct {
