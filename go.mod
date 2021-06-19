@@ -1,3 +1,3 @@
-module inrd/golem.git
+module inrd/golem
 
 go 1.15
